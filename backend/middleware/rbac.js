@@ -56,6 +56,19 @@ async function resolveGardenId(request, reply) {
       });
       return null;
     }
+    if (params.plantId) {
+      const plant = await ZonePlant.findOne({
+        where: { id: params.plantId, zone_id: zone.id },
+        attributes: ['id', 'zone_id']
+      });
+      if (!plant) {
+        reply.code(404).send({
+          success: false,
+          error: { code: 'PLANT_NOT_FOUND', message: `Plant ${params.plantId} not found in zone ${zone.id}`, statusCode: 404 }
+        });
+        return null;
+      }
+    }
     request.resolvedGardenId = zone.garden_id;
     return zone.garden_id;
   }

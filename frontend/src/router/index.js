@@ -4,6 +4,7 @@ import GardensView from '../views/GardensView.vue';
 import GardenDetailView from '../views/GardenDetailView.vue';
 import PlantCatalogView from '../views/PlantCatalogView.vue';
 import ZonePlantsView from '../views/ZonePlantsView.vue';
+import InviteAcceptView from '../views/InviteAcceptView.vue';
 
 const routes = [
   {
@@ -58,6 +59,11 @@ const routes = [
     path: '/zones/:zoneId/plants',
     name: 'ZonePlants',
     component: ZonePlantsView
+  },
+  {
+    path: '/invitations/accept',
+    name: 'InviteAccept',
+    component: InviteAcceptView
   }
 ];
 

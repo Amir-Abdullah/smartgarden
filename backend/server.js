@@ -93,6 +93,9 @@ function buildServer(opts = {}) {
   app.register(require('./routes/auth'), { prefix: '/api/auth' });
   app.register(require('./routes/gardens'), { prefix: '/api/gardens' });
   app.register(require('./routes/invitations'), { prefix: '/api/invitations' });
+  app.register(require('./routes/zones'), { prefix: '/api/zones' });
+  app.register(require('./routes/catalog'), { prefix: '/api/catalog' });
+  app.register(require('./routes/plants'), { prefix: '/api/zones' });
 
   return app;
 }

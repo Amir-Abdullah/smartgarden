@@ -31,7 +31,22 @@ async function verifyJwt(request, reply) {
   }
 }
 
+async function checkAdmin(request, reply) {
+  if (!request.user || !request.user.is_admin) {
+    return reply.code(403).send({
+      success: false,
+      error: {
+        code: 'ADMIN_REQUIRED',
+        message: 'Administrator privileges are required for this action.',
+        details: {},
+        statusCode: 403
+      }
+    });
+  }
+}
+
 module.exports = {
-  verifyJwt
+  verifyJwt,
+  checkAdmin
 };
 

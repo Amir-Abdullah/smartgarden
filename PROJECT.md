@@ -38,11 +38,11 @@ The system is built as a decoupled Model–View–Controller (MVC) Single Page A
 | M1 | Design Documentation Suite | Produce `Document/` suite (7 comprehensive documents, v1.1 update, 12 design gaps, 21 DDL entities, RFC 7807, compound scoping) | None | DONE |
 | M2 | Core Foundation Scaffold | Monorepo setup, `docker-compose.yml`, Fastify backend scaffold, Vue 3 Vite frontend scaffold, Sequelize migrations for all tables, 30+ seed plants, root scripts | None | DONE |
 | M3 | F1: Accounts & Authentication | User model, password_reset_tokens model, auth controller/routes, bcrypt, JWT, AuthView.vue | M2 | DONE |
-| M4 | F2: RBAC & Invitations | GardenMember & GardenInvitation models, resolver middleware, permissions matrix, invitation acceptance flow | M3 | IN_PROGRESS |
-| M5 | F3: Garden & Zone Management | Garden & Zone models/controllers/routes, timezone persistence, outdoor flag, frontend views | M4 | PLANNED |
-| M6 | F4: Plant Catalog & Reference Data | PlantCatalog model, search/filter/pagination controller/routes, 30+ plant seed verification, PlantCatalogView.vue | M2 | PLANNED |
-| M7 | F5: Zone Plant Inventory | ZonePlant model, crop tracking controller/routes, harvest calculations, ZonePlantsView.vue | M5, M6 | PLANNED |
-| M8 | Final Verification & E2E Test Pass | 100% passing E2E test suite (Tiers 1–4) via `npm test`, adversarial coverage hardening | M1–M7 | PLANNED |
+| M4 | F2: RBAC & Invitations | GardenMember & GardenInvitation models, resolver middleware, permissions matrix, invitation acceptance flow | M3 | DONE |
+| M5 | F3: Garden & Zone Management | Garden & Zone models/controllers/routes, timezone persistence, outdoor flag, frontend views | M4 | DONE |
+| M6 | F4: Plant Catalog & Reference Data | PlantCatalog model, search/filter/pagination controller/routes, 30+ plant seed verification, PlantCatalogView.vue | M2 | DONE |
+| M7 | F5: Zone Plant Inventory | ZonePlant model, crop tracking controller/routes, harvest calculations, ZonePlantsView.vue | M5, M6 | DONE |
+| M8 | Final Verification & E2E Test Pass | 100% passing E2E test suite (Tiers 1–4) via `npm test`, adversarial coverage hardening | M1–M7 | DONE |
 
 ## Interface Contracts
 
