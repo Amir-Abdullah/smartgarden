@@ -37,6 +37,12 @@ function createSequelizeInstance(dialect, storageOrConfig) {
         acquire: 30000,
         idle: 10000
       },
+      dialectOptions: {
+        connectTimeout: 20000,
+        ssl: process.env.DB_SSL === 'false' ? false : {
+          rejectUnauthorized: false
+        }
+      },
       define: {
         timestamps: true,
         underscored: true
