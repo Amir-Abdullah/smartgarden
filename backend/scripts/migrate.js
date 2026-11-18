@@ -28,10 +28,12 @@ async function runMigrations() {
 
   // Fetch executed migrations
   const rawExecuted = await sequelize.query('SELECT name FROM _migrations ORDER BY id ASC;');
-  const executedRows = Array.isArray(rawExecuted)
-    ? rawExecuted
-    : (Array.isArray(rawExecuted[0]) ? rawExecuted[0] : [rawExecuted]);
-  const executedSet = new Set(executedRows.filter(Boolean).map(r => r.name || r.NAME));
+  const flatRows = (
+    Array.isArray(rawExecuted[0])
+      ? rawExecuted[0]
+      : (Array.isArray(rawExecuted) ? rawExecuted : [rawExecuted])
+  ).flat();
+  const executedSet = new Set(flatRows.filter(Boolean).map(r => r.name || r.NAME));
 
   const migrationsDir = path.resolve(__dirname, '../migrations');
   const files = fs.readdirSync(migrationsDir)
