@@ -117,8 +117,66 @@ if (require.main === module) {
   start();
 }
 
-module.exports = {
-  buildServer,
-  start,
-  getDatabase
-};
+let cachedServer = null;
+let initPromise = null;
+
+async function getOrCreateServer() {
+  if (!cachedServer) {
+    cachedServer = buildServer();
+    try {
+      await connectDb();
+    } catch (err) {
+      console.error('[Serverless DB connect error]', err.message);
+    }
+  }
+  return cachedServer;
+}
+
+// Export buildServer, start, getDatabase for local/tests AND default function for Vercel entrypoint
+function serverlessHandler(req, res) {
+  if (!initPromise) {
+    initPromise = getOrCreateServer();
+  }
+  initPromise.then(server => {
+    let rawBody = '';
+    req.on('data', chunk => {
+      rawBody += chunk;
+    });
+    req.on('end', () => {
+      if (typeof server.inject === 'function') {
+        server.inject({
+          method: req.method,
+          url: req.url,
+          headers: req.headers,
+          payload: rawBody
+        }).then(injected => {
+          res.statusCode = injected.statusCode;
+          for (const [k, v] of Object.entries(injected.headers || {})) {
+            res.setHeader(k, v);
+          }
+          res.end(injected.payload);
+        }).catch(err => {
+          res.statusCode = 500;
+          res.setHeader('content-type', 'application/json');
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      } else if (server.server && typeof server.server.emit === 'function') {
+        server.server.emit('request', req, res);
+      } else {
+        res.statusCode = 500;
+        res.setHeader('content-type', 'application/json');
+        res.end(JSON.stringify({ error: 'Server dispatcher could not handle request' }));
+      }
+    });
+  }).catch(err => {
+    res.statusCode = 500;
+    res.setHeader('content-type', 'application/json');
+    res.end(JSON.stringify({ error: err.message }));
+  });
+}
+
+serverlessHandler.buildServer = buildServer;
+serverlessHandler.start = start;
+serverlessHandler.getDatabase = getDatabase;
+
+module.exports = serverlessHandler;
