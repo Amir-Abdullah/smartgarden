@@ -132,42 +132,55 @@ async function getOrCreateServer() {
   return cachedServer;
 }
 
-// Export buildServer, start, getDatabase for local/tests AND default function for Vercel entrypoint
+// Serverless entrypoint for Vercel
 function serverlessHandler(req, res) {
   if (!initPromise) {
     initPromise = getOrCreateServer();
   }
-  initPromise.then(server => {
-    let rawBody = '';
-    req.on('data', chunk => {
-      rawBody += chunk;
-    });
-    req.on('end', () => {
-      if (typeof server.inject === 'function') {
-        server.inject({
-          method: req.method,
-          url: req.url,
-          headers: req.headers,
-          payload: rawBody
-        }).then(injected => {
-          res.statusCode = injected.statusCode;
-          for (const [k, v] of Object.entries(injected.headers || {})) {
-            res.setHeader(k, v);
-          }
-          res.end(injected.payload);
-        }).catch(err => {
-          res.statusCode = 500;
-          res.setHeader('content-type', 'application/json');
-          res.end(JSON.stringify({ error: err.message }));
-        });
-      } else if (server.server && typeof server.server.emit === 'function') {
-        server.server.emit('request', req, res);
-      } else {
+
+  const dispatch = (server, bodyPayload) => {
+    if (typeof server.inject === 'function') {
+      server.inject({
+        method: req.method || 'GET',
+        url: req.url || '/',
+        headers: req.headers || {},
+        payload: bodyPayload
+      }).then(injected => {
+        res.statusCode = injected.statusCode;
+        for (const [k, v] of Object.entries(injected.headers || {})) {
+          res.setHeader(k, v);
+        }
+        res.end(injected.payload);
+      }).catch(err => {
         res.statusCode = 500;
         res.setHeader('content-type', 'application/json');
-        res.end(JSON.stringify({ error: 'Server dispatcher could not handle request' }));
-      }
-    });
+        res.end(JSON.stringify({ error: err.message }));
+      });
+    } else if (server.server && typeof server.server.emit === 'function') {
+      server.server.emit('request', req, res);
+    } else {
+      res.statusCode = 500;
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify({ error: 'Server dispatcher unavailable' }));
+    }
+  };
+
+  initPromise.then(server => {
+    // Check if Vercel already parsed the body or if it has an event stream
+    if (req.body !== undefined && req.body !== null) {
+      const payload = typeof req.body === 'object' ? JSON.stringify(req.body) : String(req.body);
+      dispatch(server, payload);
+    } else if (typeof req.on === 'function') {
+      let raw = '';
+      req.on('data', chunk => { raw += chunk; });
+      req.on('end', () => { dispatch(server, raw); });
+      req.on('error', err => {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: err.message }));
+      });
+    } else {
+      dispatch(server, '');
+    }
   }).catch(err => {
     res.statusCode = 500;
     res.setHeader('content-type', 'application/json');
