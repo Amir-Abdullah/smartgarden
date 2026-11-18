@@ -22,6 +22,7 @@ function createSequelizeInstance(dialect, storageOrConfig) {
   }
 
   // MariaDB
+  const mariadbModule = require('mariadb');
   return new Sequelize(
     process.env.DB_NAME || 'smartgarden',
     process.env.DB_USER || 'smartgarden_user',
@@ -30,6 +31,7 @@ function createSequelizeInstance(dialect, storageOrConfig) {
       host: process.env.DB_HOST || 'localhost',
       port: Number(process.env.DB_PORT || 3306),
       dialect: 'mariadb',
+      dialectModule: mariadbModule,
       logging: process.env.DB_LOGGING === 'true' ? console.log : false,
       pool: {
         max: 10,
