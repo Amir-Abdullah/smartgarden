@@ -17,6 +17,7 @@
     "dotenv": "^16.6.1",
     "fastify": "^4.28.1",
     "mariadb": "^3.3.0",
+    "pg-connection-string": "^2.6.4",
     "sequelize": "^6.37.3"
   }
 }
