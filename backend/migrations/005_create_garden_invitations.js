@@ -39,8 +39,7 @@ module.exports = {
       },
       token: {
         type: DataTypes.STRING(64),
-        allowNull: false,
-        unique: true
+        allowNull: false
       },
       status: {
         type: DataTypes.ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'CANCELED'),

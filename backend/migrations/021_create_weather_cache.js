@@ -18,8 +18,7 @@ module.exports = {
       },
       grid_key: {
         type: DataTypes.STRING(32),
-        allowNull: false,
-        unique: true
+        allowNull: false
       },
       weather_data: {
         type: DataTypes.JSON,

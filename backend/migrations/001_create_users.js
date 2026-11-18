@@ -14,8 +14,7 @@ module.exports = {
       },
       email: {
         type: DataTypes.STRING(255),
-        allowNull: false,
-        unique: true
+        allowNull: false
       },
       password_hash: {
         type: DataTypes.STRING(255),
@@ -23,8 +22,7 @@ module.exports = {
       },
       google_id: {
         type: DataTypes.STRING(255),
-        allowNull: true,
-        unique: true
+        allowNull: true
       },
       location_region: {
         type: DataTypes.STRING(100),

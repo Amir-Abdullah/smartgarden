@@ -24,8 +24,7 @@ module.exports = {
       },
       device_uid: {
         type: DataTypes.STRING(64),
-        allowNull: false,
-        unique: true
+        allowNull: false
       },
       key_prefix: {
         type: DataTypes.STRING(16),
@@ -33,8 +32,7 @@ module.exports = {
       },
       key_hash: {
         type: DataTypes.STRING(64),
-        allowNull: false,
-        unique: true
+        allowNull: false
       },
       device_type: {
         type: DataTypes.ENUM('SIMULATOR', 'ESP32_WROOM', 'SG_PRO_V1', 'GENERIC_IOT'),

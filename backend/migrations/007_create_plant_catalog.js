@@ -10,8 +10,7 @@ module.exports = {
       },
       scientific_name: {
         type: DataTypes.STRING(150),
-        allowNull: false,
-        unique: true
+        allowNull: false
       },
       common_name: {
         type: DataTypes.STRING(100),
