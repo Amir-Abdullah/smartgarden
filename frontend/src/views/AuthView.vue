@@ -1,280 +1,310 @@
 <template>
-  <div class="auth-container">
-    <!-- Authenticated State Card -->
-    <div v-if="authStore.isAuthenticated && currentMode !== 'reset'" class="auth-card profile-card">
-      <div class="profile-header">
-        <div class="avatar-circle">
-          {{ userInitials }}
-        </div>
-        <div>
-          <h3>{{ authStore.userName || 'Gardener' }}</h3>
-          <p class="profile-email">{{ authStore.userEmail }}</p>
-          <span class="role-badge" :class="{ 'admin-badge': authStore.isAdmin }">
-            {{ authStore.isAdmin ? 'Platform Administrator' : 'Active Member' }}
-          </span>
-        </div>
+  <div class="supa-auth-wrapper">
+    <div class="supa-auth-container">
+      <!-- Brand & Header -->
+      <div class="supa-brand-header">
+        <router-link to="/" class="supa-brand-link">
+          <span class="supa-logo-icon">🌱</span>
+          <span class="supa-logo-text">Smart Garden</span>
+        </router-link>
+        <p class="supa-tagline">Precision Agriculture & Garden Intelligence Platform</p>
       </div>
 
-      <div class="profile-details" v-if="authStore.user">
-        <div class="detail-row">
-          <span class="detail-label">User ID:</span>
-          <span class="detail-value">#{{ authStore.user.id }}</span>
-        </div>
-        <div class="detail-row" v-if="authStore.user.location_region">
-          <span class="detail-label">Climate Region:</span>
-          <span class="detail-value">{{ authStore.user.location_region }}</span>
-        </div>
-        <div class="detail-row" v-if="authStore.user.created_at">
-          <span class="detail-label">Member Since:</span>
-          <span class="detail-value">{{ formatDate(authStore.user.created_at) }}</span>
-        </div>
-      </div>
-
-      <div class="auth-actions">
-        <router-link to="/gardens" class="btn btn-primary">Go to Gardens Dashboard</router-link>
-        <button @click="handleLogout" class="btn btn-secondary">Sign Out</button>
-      </div>
-    </div>
-
-    <!-- Unauthenticated Auth Forms Card -->
-    <div v-else class="auth-card">
-      <!-- Mode Tabs -->
-      <div class="auth-tabs">
-        <button
-          type="button"
-          class="tab-btn"
-          :class="{ active: currentMode === 'login' }"
-          @click="switchMode('login')"
-        >
-          Sign In
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
-          :class="{ active: currentMode === 'register' }"
-          @click="switchMode('register')"
-        >
-          Register
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
-          :class="{ active: currentMode === 'forgot' }"
-          @click="switchMode('forgot')"
-        >
-          Forgot
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
-          :class="{ active: currentMode === 'reset' }"
-          @click="switchMode('reset')"
-        >
-          Reset
-        </button>
-      </div>
-
-      <!-- Feedback Messages -->
-      <div v-if="errorMessage" class="alert alert-error">
-        <span class="alert-icon">⚠️</span>
-        <span>{{ errorMessage }}</span>
-      </div>
-      <div v-if="successMessage" class="alert alert-success">
-        <span class="alert-icon">✓</span>
-        <span>{{ successMessage }}</span>
-      </div>
-
-      <!-- 1. LOGIN FORM -->
-      <form v-if="currentMode === 'login'" @submit.prevent="handleLogin" class="auth-form" novalidate>
-        <div class="form-title">
-          <h3>Welcome Back</h3>
-          <p>Access your gardens, zones, and IoT sensor telemetry.</p>
-        </div>
-
-        <div class="form-group">
-          <label for="login-email">Email Address</label>
-          <input
-            id="login-email"
-            v-model="loginForm.email"
-            type="email"
-            placeholder="name@example.com"
-            required
-            autocomplete="email"
-          />
-        </div>
-
-        <div class="form-group">
-          <div class="label-with-link">
-            <label for="login-password">Password</label>
-            <a href="#" @click.prevent="switchMode('forgot')" class="inline-link">Forgot?</a>
+      <!-- Authenticated Profile Card -->
+      <div v-if="authStore.isAuthenticated && currentView !== 'update_password'" class="supa-auth-card profile-mode">
+        <div class="profile-header-area">
+          <div class="profile-avatar">
+            {{ userInitials }}
           </div>
-          <input
-            id="login-password"
-            v-model="loginForm.password"
-            type="password"
-            placeholder="••••••••"
-            required
-            autocomplete="current-password"
-          />
+          <div class="profile-meta">
+            <h3>{{ authStore.userName || 'Gardener' }}</h3>
+            <span class="profile-email">{{ authStore.userEmail }}</span>
+            <div class="badge-row">
+              <span class="role-pill" :class="{ 'admin-pill': authStore.isAdmin }">
+                {{ authStore.isAdmin ? '👑 Platform Administrator' : '🌿 Garden Member' }}
+              </span>
+            </div>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block" :disabled="authStore.loading">
-          <span v-if="authStore.loading">Signing in...</span>
-          <span v-else>Sign In</span>
-        </button>
-
-        <p class="form-footer">
-          Don't have an account?
-          <a href="#" @click.prevent="switchMode('register')" class="inline-link">Register here</a>
-        </p>
-      </form>
-
-      <!-- 2. REGISTER FORM -->
-      <form v-else-if="currentMode === 'register'" @submit.prevent="handleRegister" class="auth-form" novalidate>
-        <div class="form-title">
-          <h3>Create an Account</h3>
-          <p>Start tracking your crops and autonomous garden rules.</p>
+        <div class="profile-details-grid">
+          <div class="detail-box">
+            <span class="detail-lbl">User ID</span>
+            <span class="detail-val">#{{ authStore.user?.id || '—' }}</span>
+          </div>
+          <div class="detail-box">
+            <span class="detail-lbl">Climate Region</span>
+            <span class="detail-val">{{ authStore.user?.location_region || 'Temperate Zone' }}</span>
+          </div>
+          <div class="detail-box">
+            <span class="detail-lbl">Joined Platform</span>
+            <span class="detail-val">{{ formatDate(authStore.user?.created_at) }}</span>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="reg-name">Full Name</label>
-          <input
-            id="reg-name"
-            v-model="regForm.name"
-            type="text"
-            placeholder="Jane Gardener"
-            required
-            autocomplete="name"
-          />
+        <div class="profile-action-group">
+          <router-link to="/dashboard" class="supa-btn supa-btn-primary">
+            Launch Gardener Dashboard &rarr;
+          </router-link>
+          <button @click="handleLogout" class="supa-btn supa-btn-outline">
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- Unauthenticated Supa-Kit Auth Card -->
+      <div v-else class="supa-auth-card">
+        <!-- Card Title & Subtitle based on active view -->
+        <div class="supa-card-header">
+          <h2 class="supa-card-title">{{ currentHeader.title }}</h2>
+          <p class="supa-card-subtitle">{{ currentHeader.subtitle }}</p>
         </div>
 
-        <div class="form-group">
-          <label for="reg-email">Email Address</label>
-          <input
-            id="reg-email"
-            v-model="regForm.email"
-            type="email"
-            placeholder="name@example.com"
-            required
-            autocomplete="email"
-          />
+        <!-- Alert Banners -->
+        <div v-if="errorMessage" class="supa-alert supa-alert-error" role="alert">
+          <svg class="alert-svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <span class="alert-msg">{{ errorMessage }}</span>
         </div>
 
-        <div class="form-group">
-          <label for="reg-password">Password</label>
-          <input
-            id="reg-password"
-            v-model="regForm.password"
-            type="password"
-            placeholder="At least 6 characters"
-            required
-            autocomplete="new-password"
-          />
+        <div v-if="successMessage" class="supa-alert supa-alert-success" role="alert">
+          <svg class="alert-svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <span class="alert-msg">{{ successMessage }}</span>
         </div>
 
-        <div class="form-group">
-          <label for="reg-region">Climate / Hardiness Zone (Optional)</label>
-          <input
-            id="reg-region"
-            v-model="regForm.location_region"
-            type="text"
-            placeholder="e.g. US-Zone-6b or Mediterranean"
-          />
-        </div>
+        <!-- VIEW 1: SIGN IN (sign_in) -->
+        <form v-if="currentView === 'sign_in'" @submit.prevent="handleLogin" class="supa-form">
+          <div class="supa-field">
+            <label for="signin-email" class="supa-label">Email address</label>
+            <input
+              id="signin-email"
+              v-model="loginForm.email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              class="supa-input"
+              required
+            />
+          </div>
 
-        <button type="submit" class="btn btn-primary btn-block" :disabled="authStore.loading">
-          <span v-if="authStore.loading">Creating Account...</span>
-          <span v-else>Register</span>
-        </button>
+          <div class="supa-field">
+            <div class="label-with-link">
+              <label for="signin-password" class="supa-label">Password</label>
+              <button type="button" @click="setView('forgotten_password')" class="supa-text-link">
+                Forgot your password?
+              </button>
+            </div>
+            <div class="input-password-wrap">
+              <input
+                id="signin-password"
+                v-model="loginForm.password"
+                :type="showPassword ? 'text' : 'password'"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                class="supa-input"
+                required
+              />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="password-toggle-btn"
+                tabindex="-1"
+              >
+                {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+              </button>
+            </div>
+          </div>
 
-        <p class="form-footer">
-          Already registered?
-          <a href="#" @click.prevent="switchMode('login')" class="inline-link">Sign In</a>
-        </p>
-      </form>
+          <button type="submit" class="supa-btn supa-btn-primary" :disabled="isLoading">
+            <span v-if="isLoading" class="spinner"></span>
+            <span>{{ isLoading ? 'Signing in...' : 'Sign In' }}</span>
+          </button>
 
-      <!-- 3. FORGOT PASSWORD FORM -->
-      <form v-else-if="currentMode === 'forgot'" @submit.prevent="handleForgotPassword" class="auth-form" novalidate>
-        <div class="form-title">
-          <h3>Reset Password</h3>
-          <p>Enter your account email to receive a secure password reset token.</p>
-        </div>
+          <!-- Quick Test Demo Logins -->
+          <div class="supa-divider">
+            <span class="divider-text">or continue with</span>
+          </div>
 
-        <div class="form-group">
-          <label for="forgot-email">Account Email</label>
-          <input
-            id="forgot-email"
-            v-model="forgotForm.email"
-            type="email"
-            placeholder="name@example.com"
-            required
-            autocomplete="email"
-          />
-        </div>
+          <div class="demo-buttons">
+            <button
+              type="button"
+              class="supa-btn supa-btn-subtle"
+              @click="fillDemoAccount('demo.gardener@example.com', 'PlantCare2026!')"
+            >
+              🌱 Fill Demo Gardener
+            </button>
+            <button
+              type="button"
+              class="supa-btn supa-btn-subtle"
+              @click="fillDemoAccount('admin@smartgarden.local', 'AdminMaster2026!')"
+            >
+              🛡️ Fill Admin Account
+            </button>
+          </div>
 
-        <button type="submit" class="btn btn-primary btn-block" :disabled="authStore.loading">
-          <span v-if="authStore.loading">Sending Instructions...</span>
-          <span v-else>Send Reset Instructions</span>
-        </button>
+          <!-- Footer Switcher -->
+          <div class="supa-card-footer">
+            <span>Don't have an account?</span>
+            <button type="button" @click="setView('sign_up')" class="supa-text-link font-semibold">
+              Sign up
+            </button>
+          </div>
+        </form>
 
-        <p class="form-footer">
-          Remember your password?
-          <a href="#" @click.prevent="switchMode('login')" class="inline-link">Back to Sign In</a>
-        </p>
-      </form>
+        <!-- VIEW 2: SIGN UP (sign_up) -->
+        <form v-else-if="currentView === 'sign_up'" @submit.prevent="handleRegister" class="supa-form">
+          <div class="supa-field">
+            <label for="signup-name" class="supa-label">Full Name</label>
+            <input
+              id="signup-name"
+              v-model="registerForm.name"
+              type="text"
+              autocomplete="name"
+              placeholder="Elena Vance"
+              class="supa-input"
+              required
+            />
+          </div>
 
-      <!-- 4. RESET PASSWORD FORM -->
-      <form v-else-if="currentMode === 'reset'" @submit.prevent="handleResetPassword" class="auth-form" novalidate>
-        <div class="form-title">
-          <h3>Set New Password</h3>
-          <p>Enter your 32-byte hex reset token and choose a new password.</p>
-        </div>
+          <div class="supa-field">
+            <label for="signup-email" class="supa-label">Email address</label>
+            <input
+              id="signup-email"
+              v-model="registerForm.email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              class="supa-input"
+              required
+            />
+          </div>
 
-        <div class="form-group">
-          <label for="reset-token">Reset Token</label>
-          <input
-            id="reset-token"
-            v-model="resetForm.token"
-            type="text"
-            placeholder="Paste your 64-char hex token"
-            required
-          />
-        </div>
+          <div class="supa-field">
+            <label for="signup-region" class="supa-label">Climate / USDA Hardiness Zone (Optional)</label>
+            <input
+              id="signup-region"
+              v-model="registerForm.location_region"
+              type="text"
+              placeholder="e.g. Zone 7b, Pacific Northwest"
+              class="supa-input"
+            />
+          </div>
 
-        <div class="form-group">
-          <label for="reset-new-password">New Password</label>
-          <input
-            id="reset-new-password"
-            v-model="resetForm.new_password"
-            type="password"
-            placeholder="At least 6 characters"
-            required
-            autocomplete="new-password"
-          />
-        </div>
+          <div class="supa-field">
+            <label for="signup-password" class="supa-label">Password (min 8 characters)</label>
+            <div class="input-password-wrap">
+              <input
+                id="signup-password"
+                v-model="registerForm.password"
+                :type="showPassword ? 'text' : 'password'"
+                autocomplete="new-password"
+                placeholder="At least 8 characters"
+                class="supa-input"
+                required
+                minlength="8"
+              />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="password-toggle-btn"
+                tabindex="-1"
+              >
+                {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+              </button>
+            </div>
+          </div>
 
-        <div class="form-group">
-          <label for="reset-confirm-password">Confirm New Password</label>
-          <input
-            id="reset-confirm-password"
-            v-model="resetForm.confirm_password"
-            type="password"
-            placeholder="Re-enter your new password"
-            required
-            autocomplete="new-password"
-          />
-        </div>
+          <button type="submit" class="supa-btn supa-btn-primary" :disabled="isLoading">
+            <span v-if="isLoading" class="spinner"></span>
+            <span>{{ isLoading ? 'Creating Account...' : 'Sign Up' }}</span>
+          </button>
 
-        <button type="submit" class="btn btn-primary btn-block" :disabled="authStore.loading">
-          <span v-if="authStore.loading">Resetting Password...</span>
-          <span v-else>Update Password</span>
-        </button>
+          <!-- Footer Switcher -->
+          <div class="supa-card-footer">
+            <span>Already have an account?</span>
+            <button type="button" @click="setView('sign_in')" class="supa-text-link font-semibold">
+              Sign in
+            </button>
+          </div>
+        </form>
 
-        <p class="form-footer">
-          Back to
-          <a href="#" @click.prevent="switchMode('login')" class="inline-link">Sign In</a>
-        </p>
-      </form>
+        <!-- VIEW 3: FORGOTTEN PASSWORD (forgotten_password) -->
+        <form v-else-if="currentView === 'forgotten_password'" @submit.prevent="handleForgotPassword" class="supa-form">
+          <div class="supa-field">
+            <label for="forgot-email" class="supa-label">Email address</label>
+            <input
+              id="forgot-email"
+              v-model="forgotEmail"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              class="supa-input"
+              required
+            />
+          </div>
+
+          <button type="submit" class="supa-btn supa-btn-primary" :disabled="isLoading">
+            <span v-if="isLoading" class="spinner"></span>
+            <span>{{ isLoading ? 'Sending Instructions...' : 'Send Reset Instructions' }}</span>
+          </button>
+
+          <!-- Footer Switcher -->
+          <div class="supa-card-footer">
+            <button type="button" @click="setView('sign_in')" class="supa-text-link font-semibold">
+              &larr; Back to Sign In
+            </button>
+          </div>
+        </form>
+
+        <!-- VIEW 4: UPDATE PASSWORD (update_password) -->
+        <form v-else-if="currentView === 'update_password'" @submit.prevent="handleResetPassword" class="supa-form">
+          <div class="supa-field">
+            <label for="reset-token" class="supa-label">Reset Token</label>
+            <input
+              id="reset-token"
+              v-model="resetToken"
+              type="text"
+              placeholder="Paste token received in instructions"
+              class="supa-input"
+              required
+            />
+          </div>
+
+          <div class="supa-field">
+            <label for="reset-password" class="supa-label">New Password (min 8 characters)</label>
+            <input
+              id="reset-password"
+              v-model="newPassword"
+              type="password"
+              placeholder="Enter new secure password"
+              class="supa-input"
+              required
+              minlength="8"
+            />
+          </div>
+
+          <button type="submit" class="supa-btn supa-btn-primary" :disabled="isLoading">
+            <span v-if="isLoading" class="spinner"></span>
+            <span>{{ isLoading ? 'Updating Password...' : 'Update Password' }}</span>
+          </button>
+
+          <!-- Footer Switcher -->
+          <div class="supa-card-footer">
+            <button type="button" @click="setView('sign_in')" class="supa-text-link font-semibold">
+              &larr; Back to Sign In
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Trust & Platform Info -->
+      <div class="supa-security-footer">
+        <span class="security-lock">🔒</span>
+        <span>Secured with JWT and bcrypt password encryption. Dual-dialect MariaDB & SQLite.</span>
+      </div>
     </div>
   </div>
 </template>
@@ -301,480 +331,635 @@ export default {
     const router = useRouter();
     const authStore = useAuthStore();
 
-    const currentMode = ref(props.mode || 'login');
-    const localError = ref('');
-    const localSuccess = ref('');
+    // Map internal views: 'sign_in', 'sign_up', 'forgotten_password', 'update_password'
+    const resolveInitialView = (mode) => {
+      switch (mode) {
+        case 'register':
+          return 'sign_up';
+        case 'forgot':
+          return 'forgotten_password';
+        case 'reset':
+          return 'update_password';
+        default:
+          return 'sign_in';
+      }
+    };
 
-    const loginForm = ref({
-      email: '',
-      password: ''
-    });
+    const currentView = ref(resolveInitialView(props.mode));
+    const showPassword = ref(false);
+    const errorMessage = ref('');
+    const successMessage = ref('');
+    const isLoading = ref(false);
 
-    const regForm = ref({
-      name: '',
-      email: '',
-      password: '',
-      location_region: ''
-    });
+    // Form Models
+    const loginForm = ref({ email: '', password: '' });
+    const registerForm = ref({ name: '', email: '', password: '', location_region: '' });
+    const forgotEmail = ref('');
+    const resetToken = ref(props.token || route.query.token || '');
+    const newPassword = ref('');
 
-    const forgotForm = ref({
-      email: ''
-    });
+    watch(
+      () => props.mode,
+      (newMode) => {
+        currentView.value = resolveInitialView(newMode);
+        clearAlerts();
+      }
+    );
 
-    const resetForm = ref({
-      token: props.token || '',
-      new_password: '',
-      confirm_password: ''
-    });
-
-    // Detect mode from route path or props
-    const syncModeFromRoute = () => {
-      if (route.path === '/register') {
-        currentMode.value = 'register';
-      } else if (route.path === '/forgot-password') {
-        currentMode.value = 'forgot';
-      } else if (route.path === '/reset-password') {
-        currentMode.value = 'reset';
-        if (route.query.token) {
-          resetForm.value.token = route.query.token;
+    watch(
+      () => route.query.token,
+      (newToken) => {
+        if (newToken) {
+          resetToken.value = newToken;
+          currentView.value = 'update_password';
         }
-      } else if (route.path === '/login') {
-        currentMode.value = 'login';
-      } else if (props.mode) {
-        currentMode.value = props.mode;
       }
+    );
+
+    const setView = (viewName) => {
+      currentView.value = viewName;
+      clearAlerts();
     };
 
-    onMounted(async () => {
-      syncModeFromRoute();
-      if (authStore.token && !authStore.user) {
-        await authStore.fetchMe();
-      }
-    });
-
-    watch(() => route.path, () => {
-      syncModeFromRoute();
-      localError.value = '';
-      localSuccess.value = '';
-    });
-
-    const switchMode = (mode) => {
-      currentMode.value = mode;
-      localError.value = '';
-      localSuccess.value = '';
-      authStore.error = null;
-      authStore.successMessage = null;
-
-      // Sync route URL cleanly
-      if (mode === 'login' && route.path !== '/login') router.push('/login');
-      else if (mode === 'register' && route.path !== '/register') router.push('/register');
-      else if (mode === 'forgot' && route.path !== '/forgot-password') router.push('/forgot-password');
-      else if (mode === 'reset' && route.path !== '/reset-password') router.push('/reset-password');
+    const clearAlerts = () => {
+      errorMessage.value = '';
+      successMessage.value = '';
     };
 
-    const errorMessage = computed(() => localError.value || authStore.error);
-    const successMessage = computed(() => localSuccess.value || authStore.successMessage);
+    const currentHeader = computed(() => {
+      switch (currentView.value) {
+        case 'sign_up':
+          return {
+            title: 'Create an account',
+            subtitle: 'Start organizing your precision microclimate plots and crops'
+          };
+        case 'forgotten_password':
+          return {
+            title: 'Reset your password',
+            subtitle: 'Enter your email address and we will generate reset instructions'
+          };
+        case 'update_password':
+          return {
+            title: 'Update your password',
+            subtitle: 'Enter your reset token and your new password'
+          };
+        default:
+          return {
+            title: 'Sign in to your account',
+            subtitle: 'Welcome back! Enter your credentials to manage your gardens'
+          };
+      }
+    });
 
     const userInitials = computed(() => {
-      if (!authStore.userName) return 'SG';
-      const parts = authStore.userName.trim().split(/\s+/);
-      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      const name = authStore.userName || 'G';
+      return name
+        .split(' ')
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
     });
 
-    const formatDate = (dateStr) => {
-      try {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-      } catch {
-        return dateStr;
-      }
-    };
-
     const handleLogin = async () => {
-      localError.value = '';
-      localSuccess.value = '';
-      if (!loginForm.value.email || !loginForm.value.password) {
-        localError.value = 'Please provide both email and password.';
-        return;
-      }
+      clearAlerts();
+      isLoading.value = true;
       try {
-        await authStore.login({
-          email: loginForm.value.email,
-          password: loginForm.value.password
-        });
-        localSuccess.value = 'Logged in successfully! Redirecting...';
+        await authStore.login(loginForm.value);
+        successMessage.value = 'Signed in successfully! Redirecting...';
+        const redirect = route.query.redirect || '/dashboard';
         setTimeout(() => {
-          router.push('/gardens');
+          router.push(redirect);
         }, 600);
       } catch (err) {
-        // error captured in authStore
+        errorMessage.value = authStore.error || err.message || 'Invalid email or password.';
+      } finally {
+        isLoading.value = false;
       }
     };
 
     const handleRegister = async () => {
-      localError.value = '';
-      localSuccess.value = '';
-      if (!regForm.value.name || !regForm.value.email || !regForm.value.password) {
-        localError.value = 'Name, email, and password are required.';
-        return;
-      }
-      if (regForm.value.password.length < 6) {
-        localError.value = 'Password must be at least 6 characters.';
-        return;
-      }
+      clearAlerts();
+      isLoading.value = true;
       try {
-        await authStore.register({
-          name: regForm.value.name,
-          email: regForm.value.email,
-          password: regForm.value.password,
-          location_region: regForm.value.location_region || undefined
-        });
-        localSuccess.value = 'Account created successfully! Redirecting...';
+        await authStore.register(registerForm.value);
+        successMessage.value = 'Account created successfully! Welcome to Smart Garden.';
         setTimeout(() => {
-          router.push('/gardens');
-        }, 600);
+          router.push('/dashboard');
+        }, 800);
       } catch (err) {
-        // error captured in authStore
+        errorMessage.value = authStore.error || err.message || 'Registration failed.';
+      } finally {
+        isLoading.value = false;
       }
     };
 
     const handleForgotPassword = async () => {
-      localError.value = '';
-      localSuccess.value = '';
-      if (!forgotForm.value.email) {
-        localError.value = 'Please enter your account email address.';
-        return;
-      }
+      clearAlerts();
+      isLoading.value = true;
       try {
-        await authStore.forgotPassword(forgotForm.value.email);
-        localSuccess.value = 'If an account exists with that email, reset instructions have been sent.';
+        const res = await authStore.forgotPassword(forgotEmail.value);
+        successMessage.value =
+          authStore.successMessage || 'Password reset instructions have been generated.';
+        if (res && res.data && res.data.reset_token) {
+          resetToken.value = res.data.reset_token;
+          setTimeout(() => {
+            currentView.value = 'update_password';
+          }, 1500);
+        }
       } catch (err) {
-        // error captured in authStore
+        errorMessage.value = authStore.error || err.message || 'Unable to request reset.';
+      } finally {
+        isLoading.value = false;
       }
     };
 
     const handleResetPassword = async () => {
-      localError.value = '';
-      localSuccess.value = '';
-      if (!resetForm.value.token || !resetForm.value.new_password) {
-        localError.value = 'Reset token and new password are required.';
-        return;
-      }
-      if (resetForm.value.new_password.length < 6) {
-        localError.value = 'Password must be at least 6 characters.';
-        return;
-      }
-      if (resetForm.value.confirm_password && resetForm.value.new_password !== resetForm.value.confirm_password) {
-        localError.value = 'Passwords do not match.';
-        return;
-      }
+      clearAlerts();
+      isLoading.value = true;
       try {
         await authStore.resetPassword({
-          token: resetForm.value.token,
-          new_password: resetForm.value.new_password
+          token: resetToken.value,
+          new_password: newPassword.value
         });
-        localSuccess.value = 'Password reset successfully! You may now sign in.';
+        successMessage.value = 'Password updated successfully! Please sign in with your new password.';
         setTimeout(() => {
-          switchMode('login');
+          currentView.value = 'sign_in';
+          loginForm.value.password = '';
         }, 1200);
       } catch (err) {
-        // error captured in authStore
+        errorMessage.value = authStore.error || err.message || 'Failed to update password.';
+      } finally {
+        isLoading.value = false;
       }
     };
 
     const handleLogout = () => {
       authStore.logout();
-      localSuccess.value = 'Signed out successfully.';
-      switchMode('login');
+      currentView.value = 'sign_in';
+      clearAlerts();
     };
+
+    const fillDemoAccount = (email, password) => {
+      loginForm.value.email = email;
+      loginForm.value.password = password;
+      clearAlerts();
+    };
+
+    const formatDate = (isoString) => {
+      if (!isoString) return '—';
+      return new Date(isoString).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    };
+
+    onMounted(() => {
+      if (authStore.token && !authStore.user) {
+        authStore.fetchMe().catch(() => {});
+      }
+    });
 
     return {
       authStore,
-      currentMode,
-      switchMode,
+      currentView,
+      currentHeader,
+      showPassword,
       errorMessage,
       successMessage,
-      userInitials,
-      formatDate,
+      isLoading,
       loginForm,
-      regForm,
-      forgotForm,
-      resetForm,
+      registerForm,
+      forgotEmail,
+      resetToken,
+      newPassword,
+      userInitials,
+      setView,
       handleLogin,
       handleRegister,
       handleForgotPassword,
       handleResetPassword,
-      handleLogout
+      handleLogout,
+      fillDemoAccount,
+      formatDate
     };
   }
 };
 </script>
 
 <style scoped>
-.auth-container {
+.supa-auth-wrapper {
+  min-height: calc(80vh - 80px);
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
-  padding: 2.5rem 1rem;
-  min-height: calc(100vh - 160px);
+  padding: 2rem 1rem;
 }
 
-.auth-card {
+.supa-auth-container {
   width: 100%;
-  max-width: 460px;
-  background-color: var(--card-bg, #ffffff);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-color, #e2e8f0);
-  padding: 2rem;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Brand Header */
+.supa-brand-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.supa-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #1e293b;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.supa-logo-icon {
+  font-size: 1.75rem;
+}
+
+.supa-tagline {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Supa Auth Card */
+.supa-auth-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  padding: 2rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
   box-sizing: border-box;
 }
 
-.auth-tabs {
+.supa-card-header {
   display: flex;
-  border-bottom: 2px solid var(--border-color, #e2e8f0);
-  margin-bottom: 1.5rem;
-  gap: 0.25rem;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.tab-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 0.65rem 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-secondary, #718096);
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-  transition: all 0.2s ease;
-}
-
-.tab-btn:hover {
-  color: var(--primary-color, #2e7d32);
-}
-
-.tab-btn.active {
-  color: var(--primary-color, #2e7d32);
-  border-bottom-color: var(--primary-color, #2e7d32);
-}
-
-.form-title {
-  margin-bottom: 1.5rem;
-}
-
-.form-title h3 {
-  margin: 0 0 0.4rem 0;
+.supa-card-title {
   font-size: 1.35rem;
-  color: var(--text-primary, #1a202c);
-}
-
-.form-title p {
+  font-weight: 700;
+  color: #0f172a;
   margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-secondary, #718096);
+  letter-spacing: -0.01em;
 }
 
-.form-group {
-  margin-bottom: 1.25rem;
-}
-
-.form-group label {
-  display: block;
+.supa-card-subtitle {
   font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.4rem;
-  color: var(--text-primary, #1a202c);
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Alert Boxes */
+.supa-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.alert-svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.supa-alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.supa-alert-success {
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+/* Forms & Fields */
+.supa-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.supa-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .label-with-link {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+}
+
+.supa-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.supa-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.925rem;
+  color: #0f172a;
+  background-color: #ffffff;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.supa-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.supa-input::placeholder {
+  color: #94a3b8;
+}
+
+.input-password-wrap {
+  position: relative;
+  display: flex;
   align-items: center;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 6px;
+.input-password-wrap .supa-input {
+  padding-right: 2.5rem;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.6rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
   font-size: 0.95rem;
-  box-sizing: border-box;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  color: #64748b;
+  padding: 0.25rem;
 }
 
-.form-group input:focus {
-  border-color: var(--primary-color, #2e7d32);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
-}
-
-.btn {
+/* Buttons */
+.supa-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.95rem;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.925rem;
   font-weight: 600;
-  border-radius: 6px;
-  border: none;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
   text-decoration: none;
   box-sizing: border-box;
 }
 
-.btn:active {
-  transform: translateY(1px);
+.supa-btn-primary {
+  background-color: #10b981;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2);
 }
 
-.btn-primary {
-  background-color: var(--primary-color, #2e7d32);
-  color: white;
+.supa-btn-primary:hover:not(:disabled) {
+  background-color: #059669;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: #256628;
-}
-
-.btn-secondary {
-  background-color: #e2e8f0;
-  color: #2d3748;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background-color: #cbd5e0;
-}
-
-.btn:disabled {
+.supa-btn-primary:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
 
-.btn-block {
-  width: 100%;
-  margin-top: 0.5rem;
+.supa-btn-outline {
+  background: transparent;
+  border-color: #cbd5e1;
+  color: #475569;
 }
 
-.inline-link {
-  color: var(--primary-color, #2e7d32);
+.supa-btn-outline:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+.supa-btn-subtle {
+  background-color: #f1f5f9;
+  color: #334155;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.supa-btn-subtle:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.supa-text-link {
+  background: transparent;
+  border: none;
+  color: #059669;
+  font-size: 0.825rem;
+  cursor: pointer;
+  padding: 0;
   text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
+  transition: color 0.15s ease;
 }
 
-.inline-link:hover {
+.supa-text-link:hover {
+  color: #047857;
   text-decoration: underline;
 }
 
-.form-footer {
-  margin-top: 1.5rem;
-  margin-bottom: 0;
-  font-size: 0.875rem;
-  text-align: center;
-  color: var(--text-secondary, #718096);
-}
-
-.alert {
+/* Divider & Demo */
+.supa-divider {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  margin-bottom: 1.25rem;
+  text-align: center;
+  margin: 0.5rem 0;
 }
 
-.alert-error {
-  background-color: #fed7d7;
-  color: #9b2c2c;
-  border: 1px solid #feb2b2;
+.supa-divider::before,
+.supa-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.alert-success {
-  background-color: #c6f6d5;
-  color: #22543d;
-  border: 1px solid #9ae6b4;
+.divider-text {
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
-/* Profile Card Styling */
-.profile-card {
-  text-align: left;
+.demo-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
 }
 
-.profile-header {
+/* Card Footer */
+.supa-card-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Profile Mode Card */
+.profile-mode {
+  gap: 1.5rem;
+}
+
+.profile-header-area {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
-  margin-bottom: 1.25rem;
 }
 
-.avatar-circle {
-  width: 60px;
-  height: 60px;
+.profile-avatar {
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background-color: var(--primary-color, #2e7d32);
+  background: #10b981;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
-  font-weight: bold;
+  font-size: 1.25rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.25);
+}
+
+.profile-meta h3 {
+  margin: 0 0 0.15rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .profile-email {
-  margin: 0.2rem 0 0.4rem 0;
-  color: var(--text-secondary, #718096);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  display: block;
+  margin-bottom: 0.35rem;
 }
 
-.role-badge {
+.role-pill {
   display: inline-block;
-  padding: 0.2rem 0.55rem;
-  background-color: #e2e8f0;
-  color: #4a5568;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.725rem;
   font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background-color: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.admin-pill {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.profile-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.85rem;
+  background-color: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+}
+
+.detail-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail-lbl {
+  font-size: 0.725rem;
+  color: #94a3b8;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
-.role-badge.admin-badge {
-  background-color: #feebc8;
-  color: #7b341e;
+.detail-val {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-.profile-details {
+.profile-action-group {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.75rem;
+  gap: 0.65rem;
 }
 
-.detail-row {
+/* Security Footer */
+.supa-security-footer {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  padding: 0.4rem 0;
-  border-bottom: 1px dashed #edf2f7;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-align: center;
+  line-height: 1.4;
+  padding: 0 1rem;
 }
 
-.detail-label {
-  color: var(--text-secondary, #718096);
+/* Inline Spinner */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 0.8s linear infinite;
 }
 
-.detail-value {
-  font-weight: 500;
-  color: var(--text-primary, #1a202c);
-}
-
-.auth-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
