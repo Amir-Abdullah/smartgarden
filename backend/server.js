@@ -16,8 +16,9 @@ function buildServer(opts = {}) {
   });
 
   // Register CORS
+  const corsOrigin = config.cors.origin === '*' ? true : config.cors.origin;
   app.register(cors, {
-    origin: config.cors.origin,
+    origin: corsOrigin,
     credentials: config.cors.credentials,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
