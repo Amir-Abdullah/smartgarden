@@ -1,14 +1,21 @@
-const { buildServer } = require('./server');
-const { connectDb } = require('./config/database');
+const serverMod = require('./server.js');
+const dbConfig = require('./config/database.js');
 
 let app = null;
 let initPromise = null;
 
 async function init() {
   if (!app) {
-    app = buildServer();
+    const buildFn = typeof serverMod === 'function' ? serverMod : (serverMod.buildServer || serverMod.default);
+    if (typeof buildFn !== 'function') {
+      throw new Error(`buildServer resolution failed. serverMod type: ${typeof serverMod}, keys: ${Object.keys(serverMod || {})}`);
+    }
+    app = buildFn();
     try {
-      await connectDb();
+      const connectFn = dbConfig.connectDb || dbConfig;
+      if (typeof connectFn === 'function') {
+        await connectFn();
+      }
     } catch (err) {
       console.error('[Vercel Backend] DB Connection error:', err.message);
     }
@@ -26,12 +33,7 @@ module.exports = (req, res) => {
       rawBody += chunk;
     });
     req.on('end', () => {
-      // In Vercel serverless functions, Fastify's internal _handleRequest delivers response directly to res
-      const FastifyReply = require('fastify/index.js');
-      // If server has listen-style handler or direct dispatch:
-      if (typeof server._handleRequest === 'function') {
-        const { parse: parseUrl } = require('node:url');
-        // Construct reply instance
+      if (typeof server.inject === 'function') {
         server.inject({
           method: req.method,
           url: req.url,
@@ -45,14 +47,20 @@ module.exports = (req, res) => {
           res.end(injected.payload);
         }).catch(err => {
           res.statusCode = 500;
+          res.setHeader('content-type', 'application/json');
           res.end(JSON.stringify({ error: err.message }));
         });
-      } else {
+      } else if (server.server && typeof server.server.emit === 'function') {
         server.server.emit('request', req, res);
+      } else {
+        res.statusCode = 500;
+        res.setHeader('content-type', 'application/json');
+        res.end(JSON.stringify({ error: 'Server dispatcher could not handle request' }));
       }
     });
   }).catch(err => {
     res.statusCode = 500;
+    res.setHeader('content-type', 'application/json');
     res.end(JSON.stringify({ error: err.message }));
   });
 };
