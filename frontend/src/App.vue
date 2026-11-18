@@ -1,45 +1,65 @@
 <template>
-  <div class="app-layout">
-    <header class="app-nav">
-      <div class="nav-brand">
-        <span class="brand-icon">🌱</span>
-        <span class="brand-title">Smart Garden</span>
-      </div>
-      <nav class="nav-links">
-        <router-link to="/" class="nav-item">Dashboard</router-link>
-        <router-link to="/gardens" class="nav-item">Gardens</router-link>
-        <router-link to="/catalog" class="nav-item">Plant Catalog</router-link>
-        <router-link to="/auth" class="nav-item">Account</router-link>
-      </nav>
-    </header>
+  <UApp>
+    <div class="app-layout">
+      <header class="app-nav">
+        <router-link to="/" class="nav-brand">
+          <span class="brand-icon">🌱</span>
+          <span class="brand-title">Smart Garden</span>
+        </router-link>
+        <nav class="nav-links">
+          <router-link to="/" class="nav-item">Home</router-link>
+          <router-link to="/catalog" class="nav-item">Plant Catalog</router-link>
+          <router-link to="/dashboard" class="nav-item">Dashboard</router-link>
+          <router-link to="/auth" class="nav-item auth-pill">
+            {{ authStore.isAuthenticated ? (authStore.userName || 'Account') : 'Sign In' }}
+          </router-link>
+        </nav>
+      </header>
 
-    <main class="app-content">
-      <div class="status-banner" v-if="healthStatus">
-        <span class="status-indicator">●</span>
-        <span>System Status: <strong>{{ healthStatus }}</strong></span>
-      </div>
-      <div id="router-view-container">
-        <!-- Routed views mount here -->
-        <router-view />
-      </div>
-    </main>
+      <main class="app-content">
+        <div class="status-banner" v-if="healthStatus">
+          <span class="status-indicator">●</span>
+          <span>System Status: <strong>{{ healthStatus }}</strong></span>
+        </div>
+        <div id="router-view-container">
+          <!-- Routed views mount here -->
+          <router-view />
+        </div>
+      </main>
 
-    <footer class="app-footer">
-      <p>&copy; 2026 Smart Gardening System — Precision Agriculture Platform</p>
-    </footer>
-  </div>
+      <footer class="app-footer">
+        <div class="footer-inner">
+          <p>&copy; 2026 Smart Gardening System — Precision Agriculture Platform</p>
+          <div class="footer-links">
+            <router-link to="/">Landing</router-link>
+            <span class="sep">•</span>
+            <router-link to="/catalog">Plant Catalog</router-link>
+            <span class="sep">•</span>
+            <router-link to="/dashboard">Dashboard</router-link>
+            <span class="sep">•</span>
+            <router-link to="/auth">Auth Portal</router-link>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </UApp>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { useAuthStore } from './stores/auth.js';
 
 export default {
   name: 'App',
   setup() {
     const healthStatus = ref('Connecting...');
+    const authStore = useAuthStore();
 
     onMounted(async () => {
+      if (authStore.token) {
+        authStore.fetchMe().catch(() => {});
+      }
       try {
         const response = await axios.get('/api/health');
         if (response.data && response.data.status === 'ok') {
@@ -53,7 +73,8 @@ export default {
     });
 
     return {
-      healthStatus
+      healthStatus,
+      authStore
     };
   }
 };
@@ -150,12 +171,54 @@ body {
   border: 1px solid var(--border-color);
 }
 
+.auth-pill {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.auth-pill:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .app-footer {
   text-align: center;
-  padding: 1.5rem;
+  padding: 1.75rem 1.5rem;
   font-size: 0.85rem;
   color: var(--text-secondary);
   border-top: 1px solid var(--border-color);
   background: white;
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+.sep {
+  color: #cbd5e0;
 }
 </style>
