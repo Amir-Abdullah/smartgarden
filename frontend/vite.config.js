@@ -6,7 +6,21 @@ import path from 'path';
 export default defineConfig({
   plugins: [
     vue(),
-    ui()
+    ui({
+      ui: {
+        colors: {
+          primary: 'emerald',
+          neutral: 'zinc'
+        }
+      },
+      icon: {
+        clientBundle: {
+          scan: {
+            globInclude: ['src/**/*.{vue,js}']
+          }
+        }
+      }
+    })
   ],
   resolve: {
     alias: {

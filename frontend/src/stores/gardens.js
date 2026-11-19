@@ -222,6 +222,9 @@ export const useGardensStore = defineStore('gardens', {
         this.zonePlants = data.plants || [];
         this.zoneUtilization = data.zone_utilization || null;
         this.companionAnalysis = data.companion_analysis || null;
+        if (this.zoneUtilization && this.zoneUtilization.status !== 'OVERCROWDED') {
+          this.lastCapacityWarning = null;
+        }
         return data;
       } catch (err) {
         this.error = this.extractError(err, 'Failed to load zone inventory.');
@@ -281,6 +284,7 @@ export const useGardensStore = defineStore('gardens', {
       this.actionLoading = true;
       this.error = null;
       this.successMessage = null;
+      this.lastCapacityWarning = null;
       try {
         await api.delete(`/zones/${zoneId}/plants/${plantId}`);
         await this.fetchZonePlants(zoneId);
