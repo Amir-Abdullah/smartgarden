@@ -52,10 +52,11 @@ function createSequelizeInstance(dialect, storageOrConfig) {
       dialectModule: mariadbModule,
       logging: process.env.DB_LOGGING === 'true' ? console.log : false,
       pool: {
-        max: Number(process.env.DB_POOL_MAX || 2),
+        max: Number(process.env.DB_POOL_MAX || 1),
         min: 0,
-        acquire: 20000,
-        idle: 2000
+        acquire: 15000,
+        idle: 1000,
+        evict: 1000
       },
       dialectOptions: {
         connectTimeout: 20000,
