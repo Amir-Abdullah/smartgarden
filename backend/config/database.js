@@ -23,46 +23,39 @@ function createSequelizeInstance(dialect, storageOrConfig) {
 
   // MariaDB / MySQL
   const mariadbModule = require('mariadb');
-  const dbUri = process.env.DATABASE_URL || process.env.MYSQL_ADDON_URI;
-  if (dbUri) {
-    return new Sequelize(dbUri, {
-      dialect: 'mariadb',
-      dialectModule: mariadbModule,
-      logging: process.env.DB_LOGGING === 'true' ? console.log : false,
-      pool: {
-        max: 10,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-      },
-      dialectOptions: {
-        connectTimeout: 20000,
-        ssl: process.env.DB_SSL === 'false' ? false : {
-          rejectUnauthorized: false
-        }
-      },
-      define: {
-        timestamps: true,
-        underscored: true
-      }
-    });
+  let host = process.env.DB_HOST || process.env.MYSQL_ADDON_HOST || 'bb34mwz9qi0g8blktlam-mysql.services.clever-cloud.com';
+  let port = Number(process.env.DB_PORT || process.env.MYSQL_ADDON_PORT || 3306);
+  let dbName = process.env.DB_NAME || process.env.MYSQL_ADDON_DB || 'bb34mwz9qi0g8blktlam';
+  let user = process.env.DB_USER || process.env.MYSQL_ADDON_USER || 'udfb1i4ltuzp3a9m';
+  let pass = process.env.DB_PASS || process.env.MYSQL_ADDON_PASSWORD || '5DcsoNlfZ5wKhuLopN4C';
+
+  const uri = process.env.DATABASE_URL || process.env.MYSQL_ADDON_URI;
+  if (uri && uri.includes('://')) {
+    try {
+      const parsed = new URL(uri);
+      host = parsed.hostname || host;
+      port = Number(parsed.port) || port;
+      user = decodeURIComponent(parsed.username) || user;
+      pass = decodeURIComponent(parsed.password) || pass;
+      dbName = (parsed.pathname || '').replace(/^\//, '') || dbName;
+    } catch (_) {}
   }
 
   return new Sequelize(
-    process.env.DB_NAME || process.env.MYSQL_ADDON_DB || 'bb34mwz9qi0g8blktlam',
-    process.env.DB_USER || process.env.MYSQL_ADDON_USER || 'udfb1i4ltuzp3a9m',
-    process.env.DB_PASS || process.env.MYSQL_ADDON_PASSWORD || '5DcsoNlfZ5wKhuLopN4C',
+    dbName,
+    user,
+    pass,
     {
-      host: process.env.DB_HOST || process.env.MYSQL_ADDON_HOST || 'bb34mwz9qi0g8blktlam-mysql.services.clever-cloud.com',
-      port: Number(process.env.DB_PORT || process.env.MYSQL_ADDON_PORT || 3306),
+      host,
+      port,
       dialect: 'mariadb',
       dialectModule: mariadbModule,
       logging: process.env.DB_LOGGING === 'true' ? console.log : false,
       pool: {
-        max: 10,
+        max: Number(process.env.DB_POOL_MAX || 2),
         min: 0,
-        acquire: 30000,
-        idle: 10000
+        acquire: 20000,
+        idle: 2000
       },
       dialectOptions: {
         connectTimeout: 20000,
