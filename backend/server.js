@@ -90,13 +90,29 @@ function buildServer(opts = {}) {
   app.get('/health', healthHandler);
   app.get('/api/health', healthHandler);
 
-  // Register Feature Routes
-  app.register(require('./routes/auth'), { prefix: '/api/auth' });
-  app.register(require('./routes/gardens'), { prefix: '/api/gardens' });
-  app.register(require('./routes/invitations'), { prefix: '/api/invitations' });
-  app.register(require('./routes/zones'), { prefix: '/api/zones' });
-  app.register(require('./routes/catalog'), { prefix: '/api/catalog' });
-  app.register(require('./routes/plants'), { prefix: '/api/zones' });
+  // Register Feature Routes with both /api prefix and direct path for flexible Vercel rewrites
+  const authRoutes = require('./routes/auth');
+  const gardensRoutes = require('./routes/gardens');
+  const invitationsRoutes = require('./routes/invitations');
+  const zonesRoutes = require('./routes/zones');
+  const catalogRoutes = require('./routes/catalog');
+  const plantsRoutes = require('./routes/plants');
+
+  // Prefixed with /api
+  app.register(authRoutes, { prefix: '/api/auth' });
+  app.register(gardensRoutes, { prefix: '/api/gardens' });
+  app.register(invitationsRoutes, { prefix: '/api/invitations' });
+  app.register(zonesRoutes, { prefix: '/api/zones' });
+  app.register(catalogRoutes, { prefix: '/api/catalog' });
+  app.register(plantsRoutes, { prefix: '/api/zones' });
+
+  // Direct without /api (for rewrites that strip the /api prefix)
+  app.register(authRoutes, { prefix: '/auth' });
+  app.register(gardensRoutes, { prefix: '/gardens' });
+  app.register(invitationsRoutes, { prefix: '/invitations' });
+  app.register(zonesRoutes, { prefix: '/zones' });
+  app.register(catalogRoutes, { prefix: '/catalog' });
+  app.register(plantsRoutes, { prefix: '/zones' });
 
   return app;
 }
@@ -128,68 +144,56 @@ async function getOrCreateServer() {
     } catch (err) {
       console.error('[Serverless DB connect error]', err.message);
     }
+    await cachedServer.ready();
   }
   return cachedServer;
 }
 
 // Serverless entrypoint for Vercel
-function serverlessHandler(req, res) {
-  if (!initPromise) {
-    initPromise = getOrCreateServer();
-  }
+async function serverlessHandler(req, res) {
+  try {
+    if (!initPromise) {
+      initPromise = getOrCreateServer();
+    }
+    const server = await initPromise;
 
-  const dispatch = (server, bodyPayload) => {
-    if (typeof server.inject === 'function') {
-      server.inject({
+    if (req.body !== undefined && req.body !== null) {
+      const payload = typeof req.body === 'object' ? JSON.stringify(req.body) : String(req.body);
+      const injected = await server.inject({
         method: req.method || 'GET',
         url: req.url || '/',
         headers: req.headers || {},
-        payload: bodyPayload
-      }).then(injected => {
-        res.statusCode = injected.statusCode;
-        for (const [k, v] of Object.entries(injected.headers || {})) {
-          res.setHeader(k, v);
-        }
-        res.end(injected.payload);
-      }).catch(err => {
-        res.statusCode = 500;
-        res.setHeader('content-type', 'application/json');
-        res.end(JSON.stringify({ error: err.message }));
+        payload
       });
-    } else if (server.server && typeof server.server.emit === 'function') {
-      server.server.emit('request', req, res);
-    } else {
+      res.statusCode = injected.statusCode;
+      for (const [k, v] of Object.entries(injected.headers || {})) {
+        res.setHeader(k, v);
+      }
+      res.end(injected.payload);
+      return;
+    }
+
+    server.server.emit('request', req, res);
+  } catch (err) {
+    console.error('[Serverless Handler Error]', err);
+    if (!res.headersSent) {
       res.statusCode = 500;
       res.setHeader('content-type', 'application/json');
-      res.end(JSON.stringify({ error: 'Server dispatcher unavailable' }));
+      res.end(JSON.stringify({
+        success: false,
+        error: {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: err.message || 'Server error',
+          statusCode: 500
+        }
+      }));
     }
-  };
-
-  initPromise.then(server => {
-    // Check if Vercel already parsed the body or if it has an event stream
-    if (req.body !== undefined && req.body !== null) {
-      const payload = typeof req.body === 'object' ? JSON.stringify(req.body) : String(req.body);
-      dispatch(server, payload);
-    } else if (typeof req.on === 'function') {
-      let raw = '';
-      req.on('data', chunk => { raw += chunk; });
-      req.on('end', () => { dispatch(server, raw); });
-      req.on('error', err => {
-        res.statusCode = 500;
-        res.end(JSON.stringify({ error: err.message }));
-      });
-    } else {
-      dispatch(server, '');
-    }
-  }).catch(err => {
-    res.statusCode = 500;
-    res.setHeader('content-type', 'application/json');
-    res.end(JSON.stringify({ error: err.message }));
-  });
+  }
 }
 
 serverlessHandler.buildServer = buildServer;
 serverlessHandler.start = start;
 serverlessHandler.getDatabase = getDatabase;
+serverlessHandler.default = serverlessHandler;
 
 module.exports = serverlessHandler;

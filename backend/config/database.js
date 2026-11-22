@@ -21,15 +21,40 @@ function createSequelizeInstance(dialect, storageOrConfig) {
     });
   }
 
-  // MariaDB
+  // MariaDB / MySQL
   const mariadbModule = require('mariadb');
+  const dbUri = process.env.DATABASE_URL || process.env.MYSQL_ADDON_URI;
+  if (dbUri) {
+    return new Sequelize(dbUri, {
+      dialect: 'mariadb',
+      dialectModule: mariadbModule,
+      logging: process.env.DB_LOGGING === 'true' ? console.log : false,
+      pool: {
+        max: 10,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+      },
+      dialectOptions: {
+        connectTimeout: 20000,
+        ssl: process.env.DB_SSL === 'false' ? false : {
+          rejectUnauthorized: false
+        }
+      },
+      define: {
+        timestamps: true,
+        underscored: true
+      }
+    });
+  }
+
   return new Sequelize(
-    process.env.DB_NAME || 'smartgarden',
-    process.env.DB_USER || 'smartgarden_user',
-    process.env.DB_PASS || 'smartgarden_pass',
+    process.env.DB_NAME || process.env.MYSQL_ADDON_DB || 'bb34mwz9qi0g8blktlam',
+    process.env.DB_USER || process.env.MYSQL_ADDON_USER || 'udfb1i4ltuzp3a9m',
+    process.env.DB_PASS || process.env.MYSQL_ADDON_PASSWORD || '5DcsoNlfZ5wKhuLopN4C',
     {
-      host: process.env.DB_HOST || 'localhost',
-      port: Number(process.env.DB_PORT || 3306),
+      host: process.env.DB_HOST || process.env.MYSQL_ADDON_HOST || 'bb34mwz9qi0g8blktlam-mysql.services.clever-cloud.com',
+      port: Number(process.env.DB_PORT || process.env.MYSQL_ADDON_PORT || 3306),
       dialect: 'mariadb',
       dialectModule: mariadbModule,
       logging: process.env.DB_LOGGING === 'true' ? console.log : false,
