@@ -72,18 +72,21 @@ function buildServer(opts = {}) {
   // Health Check Handler
   const healthHandler = async (request, reply) => {
     let dbStatus = 'disconnected';
+    let dbError = null;
     try {
       const activeDb = getDatabase();
       await activeDb.authenticate();
       dbStatus = 'connected';
     } catch (err) {
       dbStatus = 'error';
+      dbError = err.message;
     }
 
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      db: dbStatus
+      db: dbStatus,
+      ...(dbError ? { error: dbError } : {})
     };
   };
 
