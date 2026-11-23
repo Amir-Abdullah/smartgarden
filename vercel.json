@@ -1,11 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
-    "backend": {
-      "root": "backend",
-      "framework": "fastify",
-      "entrypoint": "index.js"
-    },
     "frontend": {
       "root": "frontend",
       "framework": "vite"
@@ -14,9 +9,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": {
-        "service": "backend"
-      }
+      "destination": "https://smartgarden-backend-6ie1.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",
