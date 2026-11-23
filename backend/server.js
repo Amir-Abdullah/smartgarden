@@ -166,10 +166,16 @@ async function serverlessHandler(req, res) {
       ? (typeof req.body === 'object' ? JSON.stringify(req.body) : String(req.body))
       : undefined;
 
+    const headers = { ...(req.headers || {}) };
+    if (payload !== undefined) {
+      delete headers['content-length'];
+      delete headers['Content-Length'];
+    }
+
     const injected = await server.inject({
       method: req.method || 'GET',
       url: req.url || '/',
-      headers: req.headers || {},
+      headers,
       payload
     });
 
