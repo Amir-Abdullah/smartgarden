@@ -162,15 +162,17 @@ async function serverlessHandler(req, res) {
     }
     const server = await initPromise;
 
+    // Strip incoming content-length so Fastify/light-my-request automatically calculates the exact byte length
+    const headers = {};
+    for (const [k, v] of Object.entries(req.headers || {})) {
+      if (k.toLowerCase() !== 'content-length') {
+        headers[k] = v;
+      }
+    }
+
     const payload = (req.body !== undefined && req.body !== null)
       ? (typeof req.body === 'object' ? JSON.stringify(req.body) : String(req.body))
       : undefined;
-
-    const headers = { ...(req.headers || {}) };
-    if (payload !== undefined) {
-      delete headers['content-length'];
-      delete headers['Content-Length'];
-    }
 
     const injected = await server.inject({
       method: req.method || 'GET',
