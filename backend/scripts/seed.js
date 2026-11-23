@@ -13,8 +13,9 @@ async function runSeed() {
   const queryInterface = sequelize.getQueryInterface();
 
   // Verify plant_catalog table exists; if not, ensure migrations are run
-  const tables = await queryInterface.showAllTables();
-  if (!tables.includes('plant_catalog')) {
+  const rawTables = await queryInterface.showAllTables();
+  const tableNames = rawTables.map(t => typeof t === 'string' ? t : (t.tableName || Object.values(t)[0]));
+  if (!tableNames.includes('plant_catalog')) {
     console.log('[Seed Runner] plant_catalog table not found. Executing migrations first...');
     await runMigrations();
   }
@@ -35,7 +36,8 @@ async function runSeed() {
     );
     const existing = (Array.isArray(rawExisting[0]) ? rawExisting[0] : (Array.isArray(rawExisting) ? rawExisting : [rawExisting])).flat().filter(Boolean);
 
-    const now = new Date().toISOString();
+    // Standard SQL datetime format (YYYY-MM-DD HH:MM:SS) compatible with MariaDB, MySQL, Postgres, and SQLite
+    const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
     const record = {
       scientific_name: plant.scientific_name,
       common_name: plant.common_name,

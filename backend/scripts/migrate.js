@@ -71,7 +71,8 @@ async function runMigrations() {
   }
 
   const allTables = await queryInterface.showAllTables();
-  console.log(`[Migration Runner] Current database tables (${allTables.length}):`, allTables.join(', '));
+  const tableNames = allTables.map(t => typeof t === 'string' ? t : (t.tableName || Object.values(t)[0]));
+  console.log(`[Migration Runner] Current database tables (${tableNames.length}):`, tableNames.join(', '));
 }
 
 if (require.main === module) {

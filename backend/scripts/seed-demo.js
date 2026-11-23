@@ -382,7 +382,8 @@ async function runDemoSeed() {
   console.log(`[Demo Seed] Connected using dialect: ${sequelize.options.dialect}`);
 
   const queryInterface = sequelize.getQueryInterface();
-  const tables = await queryInterface.showAllTables();
+  const rawTables = await queryInterface.showAllTables();
+  const tables = rawTables.map(t => typeof t === 'string' ? t : (t.tableName || Object.values(t)[0]));
   const requiredTables = ['users', 'gardens', 'garden_members', 'zones', 'plant_catalog', 'zone_plants'];
   if (requiredTables.some((t) => !tables.includes(t))) {
     console.log('[Demo Seed] Running pending migrations first...');
