@@ -36,5 +36,10 @@
     "toposort-class": "^1.0.1",
     "validator": "^13.12.0",
     "wkx": "^0.5.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.68.4",
+    "@rollup/rollup-linux-x64-musl": "4.68.4",
+    "@rollup/rollup-win32-x64-msvc": "4.68.4"
   }
 }
