@@ -22,15 +22,29 @@ function createSequelizeInstance(dialect, storageOrConfig) {
     });
   }
 
-  // Detect URI from environment variables
-  const uri = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL || process.env.MYSQL_ADDON_URI;
+  const isOldCleverCloud = (process.env.DB_HOST && process.env.DB_HOST.includes('clever-cloud')) ||
+                           (process.env.MYSQL_ADDON_HOST && process.env.MYSQL_ADDON_HOST.includes('clever-cloud')) ||
+                           (process.env.MYSQL_ADDON_URI && process.env.MYSQL_ADDON_URI.includes('clever-cloud'));
+
+  // Detect URI from environment variables (ignoring stale Clever Cloud variables)
+  let uri = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL;
+  if (!uri && process.env.MYSQL_ADDON_URI && !isOldCleverCloud) {
+    uri = process.env.MYSQL_ADDON_URI;
+  }
+
   let activeDialect = dialect;
-  if (!activeDialect && uri) {
+  if (isOldCleverCloud) {
+    activeDialect = 'postgres';
+  } else if (!activeDialect && uri) {
     if (uri.startsWith('postgres://') || uri.startsWith('postgresql://')) {
       activeDialect = 'postgres';
     } else if (uri.startsWith('mysql://') || uri.startsWith('mariadb://')) {
       activeDialect = 'mariadb';
     }
+  }
+
+  if (!activeDialect) {
+    activeDialect = 'postgres';
   }
 
   const isPostgres = activeDialect === 'postgres' || activeDialect === 'postgresql';
@@ -139,8 +153,15 @@ function createSequelizeInstance(dialect, storageOrConfig) {
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isTestEnv = nodeEnv === 'test';
-// Default dialect is postgres in development/production, or sqlite in test
-const initialDialect = process.env.DB_DIALECT || (isTestEnv ? 'sqlite' : 'postgres');
+const isOldCleverCloudEnv = (process.env.DB_HOST && process.env.DB_HOST.includes('clever-cloud')) ||
+                            (process.env.MYSQL_ADDON_HOST && process.env.MYSQL_ADDON_HOST.includes('clever-cloud')) ||
+                            (process.env.MYSQL_ADDON_URI && process.env.MYSQL_ADDON_URI.includes('clever-cloud'));
+
+// Default dialect is postgres in development/production (unless in test or explicitly non-clevercloud mariadb)
+let initialDialect = process.env.DB_DIALECT;
+if (isOldCleverCloudEnv || !initialDialect) {
+  initialDialect = isTestEnv ? 'sqlite' : 'postgres';
+}
 
 let sequelize = createSequelizeInstance(initialDialect);
 
