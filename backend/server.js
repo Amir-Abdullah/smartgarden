@@ -160,23 +160,22 @@ async function serverlessHandler(req, res) {
     }
     const server = await initPromise;
 
-    if (req.body !== undefined && req.body !== null) {
-      const payload = typeof req.body === 'object' ? JSON.stringify(req.body) : String(req.body);
-      const injected = await server.inject({
-        method: req.method || 'GET',
-        url: req.url || '/',
-        headers: req.headers || {},
-        payload
-      });
-      res.statusCode = injected.statusCode;
-      for (const [k, v] of Object.entries(injected.headers || {})) {
-        res.setHeader(k, v);
-      }
-      res.end(injected.payload);
-      return;
-    }
+    const payload = (req.body !== undefined && req.body !== null)
+      ? (typeof req.body === 'object' ? JSON.stringify(req.body) : String(req.body))
+      : undefined;
 
-    server.server.emit('request', req, res);
+    const injected = await server.inject({
+      method: req.method || 'GET',
+      url: req.url || '/',
+      headers: req.headers || {},
+      payload
+    });
+
+    res.statusCode = injected.statusCode;
+    for (const [k, v] of Object.entries(injected.headers || {})) {
+      res.setHeader(k, v);
+    }
+    res.end(injected.payload);
   } catch (err) {
     console.error('[Serverless Handler Error]', err);
     if (!res.headersSent) {
