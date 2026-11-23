@@ -73,8 +73,8 @@ function buildServer(opts = {}) {
   const healthHandler = async (request, reply) => {
     let dbStatus = 'disconnected';
     let dbError = null;
+    const activeDb = getDatabase();
     try {
-      const activeDb = getDatabase();
       await activeDb.authenticate();
       dbStatus = 'connected';
     } catch (err) {
@@ -84,8 +84,10 @@ function buildServer(opts = {}) {
 
     return {
       status: 'ok',
+      version: '1.0.2-supabase',
       timestamp: new Date().toISOString(),
       db: dbStatus,
+      dialect: activeDb && activeDb.options ? activeDb.options.dialect : 'unknown',
       ...(dbError ? { error: dbError } : {})
     };
   };

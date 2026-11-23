@@ -7,7 +7,7 @@ async function verifyJwt(request, reply) {
         error: {
           code: 'UNAUTHORIZED',
           message: 'Missing or invalid authorization token',
-          details: {},
+          details: { reason: 'header_missing', headerKeys: Object.keys(request.headers || {}) },
           statusCode: 401
         }
       });
@@ -24,7 +24,7 @@ async function verifyJwt(request, reply) {
       error: {
         code: 'UNAUTHORIZED',
         message: 'Missing or invalid authorization token',
-        details: {},
+        details: { reason: 'verify_failed', message: err.message },
         statusCode: 401
       }
     });
