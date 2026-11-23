@@ -30,9 +30,10 @@ async function runSeed() {
   let updatedCount = 0;
 
   for (const plant of plants) {
-    const existing = await sequelize.query(
+    const rawExisting = await sequelize.query(
       `SELECT id FROM plant_catalog WHERE scientific_name = '${plant.scientific_name.replace(/'/g, "''")}';`
     );
+    const existing = (Array.isArray(rawExisting[0]) ? rawExisting[0] : (Array.isArray(rawExisting) ? rawExisting : [rawExisting])).flat().filter(Boolean);
 
     const now = new Date().toISOString();
     const record = {
@@ -77,7 +78,8 @@ async function runSeed() {
   }
 
   const totalInDb = await sequelize.query('SELECT COUNT(*) as cnt FROM plant_catalog;');
-  const count = totalInDb[0] ? (totalInDb[0].cnt || totalInDb[0]['COUNT(*)'] || 0) : plants.length;
+  const totalRows = (Array.isArray(totalInDb[0]) ? totalInDb[0] : (Array.isArray(totalInDb) ? totalInDb : [totalInDb])).flat().filter(Boolean);
+  const count = totalRows[0] ? Number(totalRows[0].cnt || totalRows[0].CNT || totalRows[0].count || totalRows[0]['COUNT(*)'] || 0) : plants.length;
 
   console.log(`[Seed Runner] Seeding complete: ${insertedCount} inserted, ${updatedCount} updated.`);
   console.log(`[Seed Runner] Total plants in catalog: ${count}`);

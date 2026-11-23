@@ -13,16 +13,19 @@ async function runMigrations() {
   const queryInterface = sequelize.getQueryInterface();
 
   // Create migrations tracking table if not exists
-  const isMaria = sequelize.options.dialect === 'mariadb' || sequelize.options.dialect === 'mysql';
-  const idColDef = isMaria
-    ? 'INT AUTO_INCREMENT PRIMARY KEY'
-    : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+  const dialect = sequelize.options.dialect || 'sqlite';
+  const isPostgres = dialect === 'postgres' || dialect === 'postgresql';
+  const isMaria = dialect === 'mariadb' || dialect === 'mysql';
+  const idColDef = isPostgres
+    ? 'SERIAL PRIMARY KEY'
+    : (isMaria ? 'INT AUTO_INCREMENT PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+  const dateColDef = isPostgres ? 'TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP' : 'DATETIME DEFAULT CURRENT_TIMESTAMP';
 
   await sequelize.query(`
     CREATE TABLE IF NOT EXISTS _migrations (
       id ${idColDef},
       name VARCHAR(255) NOT NULL UNIQUE,
-      executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      executed_at ${dateColDef}
     );
   `);
 

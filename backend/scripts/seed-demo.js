@@ -13,6 +13,13 @@ const { runSeed } = require('./seed');
 
 const DEMO_USERS = [
   {
+    name: 'Amir Abdullah',
+    email: 'abdullahamir142@gmail.com',
+    password: process.env.ADMIN_USER_PASSWORD || 'Password123!',
+    location_region: 'US-East',
+    is_admin: true
+  },
+  {
     name: 'Demo Gardener',
     email: 'demo@smartgarden.app',
     password: process.env.DEMO_USER_PASSWORD || 'DemoGarden123!',
