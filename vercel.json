@@ -12,9 +12,16 @@
       "destination": "https://smartgarden-backend-6ie1.onrender.com/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/(.*\\.[a-zA-Z0-9]+)",
       "destination": {
         "service": "frontend"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "frontend",
+        "path": "/index.html"
       }
     }
   ]
