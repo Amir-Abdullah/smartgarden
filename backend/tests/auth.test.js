@@ -471,4 +471,36 @@ describe('Milestone 3: Feature 1 (F1) - Accounts & Authentication Suite', () => 
       assert.strictEqual(res.json().error.code, 'BAD_REQUEST');
     });
   });
+
+  // OAuth Endpoints
+  describe('POST /api/auth/oauth', () => {
+    test('POST /oauth rejects missing access_token with 400 Bad Request', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/auth/oauth',
+        headers: { 'content-type': 'application/json' },
+        payload: JSON.stringify({
+          provider: 'google'
+        })
+      });
+
+      assert.strictEqual(res.statusCode, 400);
+      assert.strictEqual(res.json().error.code, 'BAD_REQUEST');
+    });
+
+    test('POST /oauth rejects invalid access_token with 401 INVALID_OAUTH_TOKEN', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/auth/oauth',
+        headers: { 'content-type': 'application/json' },
+        payload: JSON.stringify({
+          provider: 'google',
+          access_token: 'invalid_dummy_token_12345'
+        })
+      });
+
+      assert.strictEqual(res.statusCode, 401);
+      assert.strictEqual(res.json().error.code, 'INVALID_OAUTH_TOKEN');
+    });
+  });
 });

@@ -80,6 +80,25 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async loginWithOAuth(payload) {
+      this.loading = true;
+      this.error = null;
+      this.successMessage = null;
+      try {
+        const response = await api.post('/auth/oauth', payload);
+        const { user, token } = response.data.data;
+        this.setAuth(user, token);
+        this.successMessage = 'Logged in successfully with Google!';
+        return response.data;
+      } catch (err) {
+        const msg = (err.response && err.response.data && err.response.data.error && err.response.data.error.message) || err.message || 'Google sign-in failed';
+        this.error = msg;
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
     async fetchMe() {
       if (!this.token) return null;
       this.loading = true;

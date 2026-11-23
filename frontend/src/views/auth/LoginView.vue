@@ -115,11 +115,17 @@ const fields = [
   }
 ];
 
+function loginWithGoogle() {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://bpfpjnhaawwrgykxduef.supabase.co';
+  const redirectUrl = `${window.location.origin}/auth/callback`;
+  window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
+}
+
 const providers = [
   {
     label: 'Continue with Google',
     icon: 'i-simple-icons-google',
-    onClick: () => notify('Social sign-in', 'Google OAuth sign-in is scheduled for a later sprint.')
+    onClick: loginWithGoogle
   },
   {
     label: 'Continue with GitHub',

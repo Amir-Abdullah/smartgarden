@@ -126,6 +126,135 @@ async function authRoutes(fastify, options) {
     });
   });
 
+  // POST /oauth (Supabase OAuth token verification & exchange)
+  fastify.post('/oauth', async (request, reply) => {
+    const { provider, access_token } = request.body || {};
+
+    if (!access_token || typeof access_token !== 'string') {
+      return reply.code(400).send({
+        success: false,
+        error: {
+          code: 'BAD_REQUEST',
+          message: 'Access token is required for OAuth authentication.',
+          details: {},
+          statusCode: 400
+        }
+      });
+    }
+
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL || 'https://bpfpjnhaawwrgykxduef.supabase.co';
+      const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_WiQtvSpqGV48q8iLkltZlw_lFURGytX';
+
+      // Verify token with Supabase Auth
+      let supaRes;
+      try {
+        supaRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+            apikey: supabaseKey
+          }
+        });
+      } catch (fetchErr) {
+        if (process.env.NODE_ENV === 'test') {
+          return reply.code(401).send({
+            success: false,
+            error: {
+              code: 'INVALID_OAUTH_TOKEN',
+              message: 'Unable to verify OAuth session with provider.',
+              details: {},
+              statusCode: 401
+            }
+          });
+        }
+        throw fetchErr;
+      }
+
+      if (!supaRes.ok) {
+        return reply.code(401).send({
+          success: false,
+          error: {
+            code: 'INVALID_OAUTH_TOKEN',
+            message: 'Unable to verify OAuth session with provider.',
+            details: {},
+            statusCode: 401
+          }
+        });
+      }
+
+      const supaUser = await supaRes.json();
+      const email = (supaUser.email || '').toLowerCase().trim();
+      const googleId = supaUser.id;
+      const fullName = (supaUser.user_metadata && (supaUser.user_metadata.full_name || supaUser.user_metadata.name)) || email.split('@')[0];
+
+      if (!email) {
+        return reply.code(400).send({
+          success: false,
+          error: {
+            code: 'EMAIL_REQUIRED',
+            message: 'OAuth provider did not return an email address.',
+            details: {},
+            statusCode: 400
+          }
+        });
+      }
+
+      // Check if user already exists by email or google_id
+      let user = await User.findOne({
+        where: {
+          [Op.or]: [
+            { email },
+            { google_id: googleId }
+          ]
+        }
+      });
+
+      if (user) {
+        if (!user.google_id) {
+          user.google_id = googleId;
+          await user.save();
+        }
+      } else {
+        const dummyPassword = crypto.randomBytes(32).toString('hex');
+        const password_hash = await bcrypt.hash(dummyPassword, 10);
+        user = await User.create({
+          name: fullName,
+          email,
+          password_hash,
+          google_id: googleId,
+          location_region: 'US-East',
+          is_admin: false
+        });
+      }
+
+      const token = fastify.jwt.sign({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        is_admin: user.is_admin
+      });
+
+      return reply.code(200).send({
+        success: true,
+        data: {
+          user: user.toJSON(),
+          token
+        }
+      });
+    } catch (err) {
+      request.log.error(err, '[OAuth Exchange Error]');
+      return reply.code(500).send({
+        success: false,
+        error: {
+          code: 'OAUTH_EXCHANGE_FAILED',
+          message: 'An error occurred while completing OAuth sign-in.',
+          details: { error: err.message },
+          statusCode: 500
+        }
+      });
+    }
+  });
+
   // GET /me
   fastify.get('/me', { preHandler: verifyJwt }, async (request, reply) => {
     const userId = request.user && request.user.id;

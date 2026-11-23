@@ -14,6 +14,7 @@ import LoginView from '../views/auth/LoginView.vue';
 import RegisterView from '../views/auth/RegisterView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
 import ResetPasswordView from '../views/auth/ResetPasswordView.vue';
+import OAuthCallbackView from '../views/auth/OAuthCallbackView.vue';
 
 import OverviewView from '../views/dashboard/OverviewView.vue';
 import GardensView from '../views/dashboard/GardensView.vue';
@@ -133,6 +134,12 @@ const routes = [
         name: 'ResetPassword',
         component: ResetPasswordView,
         meta: { feature: 'F1', title: 'Reset Password' }
+      },
+      {
+        path: 'auth/callback',
+        name: 'AuthCallback',
+        component: OAuthCallbackView,
+        meta: { title: 'Authenticating...' }
       }
     ]
   },
