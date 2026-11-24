@@ -18,6 +18,12 @@ const AlertConfigModel = require('./AlertConfig');
 const AlertLogModel = require('./AlertLog');
 const DeviceWatchdogAlertModel = require('./DeviceWatchdogAlert');
 const WeatherCacheModel = require('./WeatherCache');
+const GrowthJournalModel = require('./GrowthJournal');
+const CommunityPostModel = require('./CommunityPost');
+const CommunityCommentModel = require('./CommunityComment');
+const UserFollowModel = require('./UserFollow');
+const MediaAssetModel = require('./MediaAsset');
+const CommunityPostLikeModel = require('./CommunityPostLike');
 
 const User = UserModel(sequelize);
 const PasswordResetToken = PasswordResetTokenModel(sequelize);
@@ -37,6 +43,12 @@ const AlertConfig = AlertConfigModel(sequelize);
 const AlertLog = AlertLogModel(sequelize);
 const DeviceWatchdogAlert = DeviceWatchdogAlertModel(sequelize);
 const WeatherCache = WeatherCacheModel(sequelize);
+const GrowthJournal = GrowthJournalModel(sequelize);
+const CommunityPost = CommunityPostModel(sequelize);
+const CommunityComment = CommunityCommentModel(sequelize);
+const UserFollow = UserFollowModel(sequelize);
+const MediaAsset = MediaAssetModel(sequelize);
+const CommunityPostLike = CommunityPostLikeModel(sequelize);
 
 // Sprint 1 Associations
 User.hasMany(PasswordResetToken, { foreignKey: 'user_id', as: 'resetTokens', onDelete: 'CASCADE' });
@@ -114,6 +126,37 @@ DeviceWatchdogAlert.belongsTo(Zone, { foreignKey: 'zone_id', as: 'zone' });
 Garden.hasMany(DeviceWatchdogAlert, { foreignKey: 'garden_id', as: 'watchdogAlerts', onDelete: 'CASCADE' });
 DeviceWatchdogAlert.belongsTo(Garden, { foreignKey: 'garden_id', as: 'garden' });
 
+// Sprint 4 Associations (F16-F20)
+ZonePlant.hasMany(GrowthJournal, { foreignKey: 'zone_plant_id', as: 'journalEntries', onDelete: 'CASCADE' });
+GrowthJournal.belongsTo(ZonePlant, { foreignKey: 'zone_plant_id', as: 'zonePlant' });
+User.hasMany(GrowthJournal, { foreignKey: 'author_id', as: 'journalEntries', onDelete: 'CASCADE' });
+GrowthJournal.belongsTo(User, { foreignKey: 'author_id', as: 'author' });
+
+User.hasMany(CommunityPost, { foreignKey: 'author_id', as: 'communityPosts', onDelete: 'CASCADE' });
+CommunityPost.belongsTo(User, { foreignKey: 'author_id', as: 'author' });
+Garden.hasMany(CommunityPost, { foreignKey: 'garden_id', as: 'communityPosts', onDelete: 'SET NULL' });
+CommunityPost.belongsTo(Garden, { foreignKey: 'garden_id', as: 'garden' });
+
+CommunityPost.hasMany(CommunityComment, { foreignKey: 'post_id', as: 'comments', onDelete: 'CASCADE' });
+CommunityComment.belongsTo(CommunityPost, { foreignKey: 'post_id', as: 'post' });
+User.hasMany(CommunityComment, { foreignKey: 'author_id', as: 'communityComments', onDelete: 'CASCADE' });
+CommunityComment.belongsTo(User, { foreignKey: 'author_id', as: 'author' });
+CommunityComment.hasMany(CommunityComment, { foreignKey: 'parent_comment_id', as: 'replies', onDelete: 'CASCADE' });
+CommunityComment.belongsTo(CommunityComment, { foreignKey: 'parent_comment_id', as: 'parent' });
+
+CommunityPost.hasMany(CommunityPostLike, { foreignKey: 'post_id', as: 'likes', onDelete: 'CASCADE' });
+CommunityPostLike.belongsTo(CommunityPost, { foreignKey: 'post_id', as: 'post' });
+User.hasMany(CommunityPostLike, { foreignKey: 'user_id', as: 'postLikes', onDelete: 'CASCADE' });
+CommunityPostLike.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+User.hasMany(UserFollow, { foreignKey: 'follower_id', as: 'followingRecords', onDelete: 'CASCADE' });
+UserFollow.belongsTo(User, { foreignKey: 'follower_id', as: 'follower' });
+User.hasMany(UserFollow, { foreignKey: 'followed_id', as: 'followerRecords', onDelete: 'CASCADE' });
+UserFollow.belongsTo(User, { foreignKey: 'followed_id', as: 'followed' });
+
+User.hasMany(MediaAsset, { foreignKey: 'uploaded_by', as: 'mediaAssets', onDelete: 'SET NULL' });
+MediaAsset.belongsTo(User, { foreignKey: 'uploaded_by', as: 'uploader' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -134,5 +177,11 @@ module.exports = {
   AlertConfig,
   AlertLog,
   DeviceWatchdogAlert,
-  WeatherCache
+  WeatherCache,
+  GrowthJournal,
+  CommunityPost,
+  CommunityComment,
+  UserFollow,
+  MediaAsset,
+  CommunityPostLike
 };

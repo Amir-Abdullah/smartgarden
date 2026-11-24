@@ -13,6 +13,9 @@ const api = axios.create({
 
 // Request interceptor to attach JWT auth token
 api.interceptors.request.use((config) => {
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData && config.headers) {
+    delete config.headers['Content-Type'];
+  }
   if (typeof localStorage !== 'undefined') {
     const token = localStorage.getItem('sg_token');
     if (token) {

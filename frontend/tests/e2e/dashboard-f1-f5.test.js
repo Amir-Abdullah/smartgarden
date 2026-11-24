@@ -83,11 +83,11 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
         const cards = Array.from(document.querySelectorAll('div'));
         return cards.find((el) => el.className.includes('cursor-pointer') && (el.innerText || '').includes(title)) || null;
       },
-      'Preview widget "Growth Journal" not found',
-      'Growth Journal'
+      'Preview widget "Multi-Channel Notifications" not found',
+      'Multi-Channel Notifications'
     );
     await page.waitForText('Planned Capabilities');
-    await page.waitForText('Coming in Sprint 4');
+    await page.waitForText('Coming in Sprint 5');
     await page.sleep(250);
     await page.clickButton('Close', { within: '[role="dialog"]' });
     await page.waitForTextGone('Planned Capabilities');
@@ -183,12 +183,8 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
       await page.waitForText('Open Sensors Console');
 
       await page.clickButton('Activity');
-      await page.waitForText('Garden Activity Feed & Field Journal');
-      await page.clickButton('Preview Journal Roadmap');
-      await page.waitForText('Planned Capabilities');
-      await page.sleep(250);
-      await page.clickButton('Close', { within: '[role="dialog"]' });
-      await page.waitForTextGone('Planned Capabilities');
+      await page.waitForText('Garden Activity Feed & Field Journal (F16)');
+      await page.waitForText('Open Growth Journal');
 
       // Members tab lists Demo Gardener as OWNER
       await page.clickButton('Members');

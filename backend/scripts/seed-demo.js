@@ -23,7 +23,10 @@ const {
   AlertConfig,
   AlertLog,
   AutomationRule,
-  WeatherCache
+  WeatherCache,
+  GrowthJournal,
+  CommunityPost,
+  CommunityComment
 } = require('../models');
 const weatherService = require('../services/weatherService');
 const { runMigrations } = require('./migrate');
@@ -718,6 +721,164 @@ async function ensureSprint3DemoData(demoUser, seededZonesByName) {
   return stats;
 }
 
+async function ensureSprint4DemoData(demoUser, seededZonesByName) {
+  const stats = {
+    communityUsers: 0,
+    journalEntries: 0,
+    dailyAggregates: 0,
+    communityPosts: 0,
+    communityComments: 0
+  };
+
+  // Seed a peer grower account for F20 Community Hub interactions & follow workflow
+  const { user: mayaUser, action: mayaAction } = await ensureUser({
+    name: 'Maya Lin',
+    email: 'maya@smartgarden.app',
+    password: process.env.DEMO_USER_PASSWORD || 'DemoGarden123!',
+    location_region: 'US-Zone-8b',
+    is_admin: false
+  });
+  if (mayaAction === 'created') stats.communityUsers++;
+
+  const southBed = seededZonesByName.get('South Raised Bed');
+  if (southBed) {
+    // 1. Growth journal entries for the first zone plant in South Raised Bed
+    const zonePlants = await ZonePlant.findAll({
+      where: { zone_id: southBed.id },
+      order: [['id', 'ASC']]
+    });
+    const tomatoPlant = zonePlants[0];
+    if (tomatoPlant) {
+      const existingCount = await GrowthJournal.count({ where: { zone_plant_id: tomatoPlant.id } });
+      if (existingCount === 0) {
+        const journalSeeds = [
+          {
+            entry_date: dateOffsetIso(-28),
+            height_cm: 14.5,
+            note: 'Transplanted hardened tomato seedlings into warm cedar raised bed with compost collar.'
+          },
+          {
+            entry_date: dateOffsetIso(-14),
+            height_cm: 26.0,
+            note: 'Strong lateral foliage growth after deep morning drip irrigation and basil underplanting.'
+          },
+          {
+            entry_date: dateOffsetIso(-2),
+            height_cm: 41.5,
+            note: 'First yellow flower trusses setting cleanly along the lower trellised leaders.'
+          }
+        ];
+        for (const entry of journalSeeds) {
+          await GrowthJournal.create({
+            zone_plant_id: tomatoPlant.id,
+            author_id: demoUser.id,
+            entry_date: entry.entry_date,
+            height_cm: entry.height_cm,
+            note: entry.note,
+            photo_url: null
+          });
+          stats.journalEntries++;
+        }
+      }
+    }
+
+    // 2. Daily sensor rollups for South Raised Bed over the last 5 days
+    const device = await Device.findOne({ where: { zone_id: southBed.id } });
+    if (device) {
+      for (let d = 1; d <= 5; d++) {
+        const statDate = dateOffsetIso(-d);
+        const existingAgg = await SensorAggregateDaily.findOne({
+          where: { zone_id: southBed.id, device_id: device.id, aggregate_date: statDate }
+        });
+        if (!existingAgg) {
+          await SensorAggregateDaily.create({
+            zone_id: southBed.id,
+            device_id: device.id,
+            aggregate_date: statDate,
+            min_soil_moisture: 44 + d,
+            max_soil_moisture: 58 + d,
+            avg_soil_moisture: 51 + d,
+            min_temperature: 17.0,
+            max_temperature: 25.5,
+            avg_temperature: 21.2 + (d * 0.3),
+            min_humidity: 50,
+            max_humidity: 72,
+            avg_humidity: 60.5,
+            peak_light_lux: 36000,
+            avg_light_lux: 22500,
+            sample_count: 18
+          });
+          stats.dailyAggregates++;
+        }
+      }
+    }
+  }
+
+  // 3. Community showcase, tips & threaded discussions
+  const existingPosts = await CommunityPost.count();
+  if (existingPosts === 0) {
+    const garden = await Garden.findOne({ where: { owner_id: demoUser.id }, order: [['id', 'ASC']] });
+    const post1 = await CommunityPost.create({
+      author_id: demoUser.id,
+      garden_id: garden ? garden.id : null,
+      title: 'Spring Cedar Bed Polyculture Setup',
+      content: 'Interplanted Heirloom Cherry Tomatoes, Sweet Genovese Basil, and French Marigolds in South Raised Bed — aphid pressure dropped almost immediately.',
+      category: 'SHOWCASE',
+      is_pinned: true,
+      is_flagged: false,
+      likes_count: 0,
+      comments_count: 2
+    });
+    stats.communityPosts++;
+
+    await CommunityPost.create({
+      author_id: mayaUser.id,
+      garden_id: null,
+      title: 'Deep Morning Mulch + Drip Tip',
+      content: 'Adding 5 cm of straw mulch cut afternoon soil temperature peaks by 4 C in my sunny tomato beds.',
+      category: 'TIP',
+      is_pinned: false,
+      is_flagged: false,
+      likes_count: 0,
+      comments_count: 0
+    });
+    stats.communityPosts++;
+
+    await CommunityPost.create({
+      author_id: mayaUser.id,
+      garden_id: null,
+      title: 'Overwintering Rosemary in Partial Shade?',
+      content: 'Has anyone tested floating row cover vs. cold frame around Zone 8b for potted coastal rosemary?',
+      category: 'QUESTION',
+      is_pinned: false,
+      is_flagged: false,
+      likes_count: 0,
+      comments_count: 0
+    });
+    stats.communityPosts++;
+
+    const c1 = await CommunityComment.create({
+      post_id: post1.id,
+      author_id: mayaUser.id,
+      parent_comment_id: null,
+      content: 'Love this companion pairing! Are you trellising the tomatoes single-stem or Florida weave?',
+      is_flagged: false
+    });
+    stats.communityComments++;
+
+    await CommunityComment.create({
+      post_id: post1.id,
+      author_id: demoUser.id,
+      parent_comment_id: c1.id,
+      content: 'Single-stem twine trellis on the sunny side so the basil gets dappled afternoon airflow!',
+      is_flagged: false
+    });
+    stats.communityComments++;
+  }
+
+  return stats;
+}
+
 async function runDemoSeed() {
   console.log('[Demo Seed] Connecting to database...');
   await dbConfig.connectDb();
@@ -783,6 +944,7 @@ async function runDemoSeed() {
 
   summary.sprint2 = await ensureSprint2DemoData(demoUser, seededZonesByName);
   summary.sprint3 = await ensureSprint3DemoData(demoUser, seededZonesByName);
+  summary.sprint4 = await ensureSprint4DemoData(demoUser, seededZonesByName);
 
   const totalCatalog = await PlantCatalog.count();
   const demoGardenCount = await Garden.count({ where: { owner_id: demoUser.id } });

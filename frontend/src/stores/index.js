@@ -9,3 +9,5 @@ export { useTasksStore } from './tasks';
 export { useSensorsStore } from './sensors';
 export { useAlertsStore } from './alerts';
 export { useRulesStore } from './rules';
+export { useHorticultureStore } from './horticulture';
+export { useSprint4Store } from './sprint4';

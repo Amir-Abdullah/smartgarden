@@ -598,28 +598,63 @@
               </div>
             </template>
 
-            <!-- TAB 5: ACTIVITY [SOON] -->
+            <!-- TAB 5: ACTIVITY & FIELD JOURNAL (F16 LIVE) -->
             <template #activity>
-              <div class="pt-4">
+              <div class="space-y-4 pt-4">
                 <UCard>
-                  <div class="flex flex-col items-center space-y-4 py-8 text-center">
-                    <div class="flex size-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                      <UIcon name="i-lucide-notebook-pen" class="size-7" />
+                  <template #header>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-white">
+                          Garden Activity Feed &amp; Field Journal (F16)
+                        </h3>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                          Chronological height measurements, observations, and growth snapshots across this garden
+                        </p>
+                      </div>
+                      <UButton
+                        to="/dashboard/journal"
+                        size="sm"
+                        color="primary"
+                        variant="soft"
+                        trailing-icon="i-lucide-arrow-right"
+                      >
+                        Open Growth Journal
+                      </UButton>
                     </div>
-                    <div class="space-y-1.5">
-                      <UBadge color="primary" variant="subtle" size="sm" icon="i-lucide-clock">
-                        F16 &bull; Coming in Sprint 4
-                      </UBadge>
-                      <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
-                        Garden Activity Feed &amp; Field Journal
-                      </h3>
-                      <p class="mx-auto max-w-lg text-sm text-zinc-500 dark:text-zinc-400">
-                        Track chronological watering events, team role changes, germination logs, and seasonal photos in Sprint 4.
-                      </p>
+                  </template>
+
+                  <UEmpty
+                    v-if="sprint4Store.gardenJournalEntries.length === 0"
+                    icon="i-lucide-notebook-pen"
+                    title="No field journal entries logged yet"
+                    description="Record plant heights, pruning milestones, and photo snapshots in the Growth Journal."
+                    :actions="[
+                      { label: 'Open Growth Journal', color: 'primary', icon: 'i-lucide-notebook-pen', to: '/dashboard/journal' }
+                    ]"
+                  />
+
+                  <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    <div
+                      v-for="entry in sprint4Store.gardenJournalEntries"
+                      :key="entry.id"
+                      class="flex flex-col justify-between gap-2 py-3 sm:flex-row sm:items-center"
+                    >
+                      <div class="space-y-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <UBadge color="primary" variant="soft" size="xs">{{ entry.entry_date }}</UBadge>
+                          <span class="text-sm font-semibold text-zinc-900 dark:text-white">{{ entry.plant_name }}</span>
+                          <UBadge color="neutral" variant="outline" size="xs">{{ entry.zone_name }}</UBadge>
+                          <UBadge v-if="entry.height_cm !== null" color="success" variant="subtle" size="xs">
+                            {{ entry.height_cm }} cm
+                          </UBadge>
+                        </div>
+                        <p class="text-xs text-zinc-600 dark:text-zinc-300">{{ entry.note }}</p>
+                      </div>
+                      <span class="shrink-0 text-[11px] text-zinc-400">
+                        by {{ entry.author_name }}
+                      </span>
                     </div>
-                    <UButton color="primary" variant="soft" icon="i-lucide-sparkles" @click="open('F16')">
-                      Preview Journal Roadmap
-                    </UButton>
                   </div>
                 </UCard>
               </div>
@@ -855,6 +890,7 @@ import { useMembersStore } from '../../stores/members.js';
 import { useAuthStore } from '../../stores/auth.js';
 import { useSensorsStore } from '../../stores/sensors.js';
 import { useAlertsStore } from '../../stores/alerts.js';
+import { useSprint4Store } from '../../stores/sprint4.js';
 import { useComingSoon } from '../../composables/useComingSoon.js';
 import realtimeService from '../../services/realtime.js';
 import AlertBellButton from '../../components/AlertBellButton.vue';
@@ -867,6 +903,7 @@ const membersStore = useMembersStore();
 const authStore = useAuthStore();
 const sensorsStore = useSensorsStore();
 const alertsStore = useAlertsStore();
+const sprint4Store = useSprint4Store();
 const { open } = useComingSoon();
 
 const activeTab = ref('zones');
@@ -1048,7 +1085,7 @@ const tabItems = computed(() => [
     value: 'activity',
     slot: 'activity',
     icon: 'i-lucide-notebook-pen',
-    badge: { label: 'Soon', color: 'primary', variant: 'subtle' }
+    badge: sprint4Store.gardenJournalEntries.length > 0 ? String(sprint4Store.gardenJournalEntries.length) : undefined
   }
 ]);
 
@@ -1124,6 +1161,7 @@ async function loadGardenData(gardenId) {
     await Promise.all([
       alertsStore.fetchGardenAlerts(gid).catch(() => {}),
       sensorsStore.reconcileZoneReadings(zoneIds).catch(() => {}),
+      sprint4Store.fetchGardenJournal(gid).catch(() => {}),
       ...zoneIds.map((zid) => sensorsStore.fetchZoneDevices(zid).catch(() => {}))
     ]);
 
@@ -1155,6 +1193,8 @@ async function handleTabChange(val) {
       sensorsStore.reconcileZoneReadings(zoneIds).catch(() => {}),
       ...zoneIds.map((zid) => sensorsStore.fetchZoneDevices(zid).catch(() => {}))
     ]);
+  } else if (val === 'activity') {
+    await sprint4Store.fetchGardenJournal(garden.value.id).catch(() => {});
   }
 }
 

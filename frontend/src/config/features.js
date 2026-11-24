@@ -1,6 +1,6 @@
 /**
  * SmartGarden Feature & Navigation Registry (F1-F24)
- * F1-F5 are live in Sprint 1; F6-F10 are live in Sprint 2; F11-F24 are scheduled across Sprints 3-5.
+ * F1-F20 are live across Sprints 1-4; F21-F24 are scheduled for Sprint 5.
  */
 
 export const FEATURES = [
@@ -255,14 +255,14 @@ export const FEATURES = [
     ]
   },
 
-  // Upcoming Features (F16 - F20, Sprint 4)
+  // Live Features (F16 - F20, Sprint 4)
   {
     id: 'F16',
     code: 'F16',
     slug: 'journal',
     title: 'Growth Journal & Photo Timeline',
     shortTitle: 'Growth Journal',
-    status: 'soon',
+    status: 'live',
     sprint: 4,
     section: 'insights',
     icon: 'i-lucide-notebook-pen',
@@ -280,7 +280,7 @@ export const FEATURES = [
     slug: 'analytics',
     title: 'Analytics & Data Export',
     shortTitle: 'Analytics',
-    status: 'soon',
+    status: 'live',
     sprint: 4,
     section: 'insights',
     icon: 'i-lucide-bar-chart-3',
@@ -298,7 +298,7 @@ export const FEATURES = [
     slug: 'ai-diagnosis',
     title: 'AI Leaf Disease & Pest Diagnosis',
     shortTitle: 'AI Diagnosis',
-    status: 'soon',
+    status: 'live',
     sprint: 4,
     section: 'insights',
     icon: 'i-lucide-scan-search',
@@ -316,7 +316,7 @@ export const FEATURES = [
     slug: 'ai-assistant',
     title: 'AI Gardening Assistant',
     shortTitle: 'AI Assistant',
-    status: 'soon',
+    status: 'live',
     sprint: 4,
     section: 'insights',
     icon: 'i-lucide-bot',
@@ -325,7 +325,7 @@ export const FEATURES = [
     highlights: [
       'Zone-aware crop rotation & troubleshooting',
       'Grounded in live inventory and telemetry',
-      'Streaming responses with deterministic fallback'
+      'Context-aware responses with deterministic fallback'
     ]
   },
   {
@@ -334,7 +334,7 @@ export const FEATURES = [
     slug: 'community',
     title: 'Community Hub & Social Feed',
     shortTitle: 'Community',
-    status: 'soon',
+    status: 'live',
     sprint: 4,
     section: 'insights',
     icon: 'i-lucide-globe',
@@ -525,7 +525,8 @@ export function getFeatureById(idOrSlug) {
 const SPRINT_LABELS = {
   1: 'Sprint 1 — Live Foundation',
   2: 'Sprint 2 — Live Operations & Telemetry',
-  3: 'Sprint 3 — Live Horticultural Intelligence'
+  3: 'Sprint 3 — Live Horticultural Intelligence',
+  4: 'Sprint 4 — Live Media, Analytics, AI & Community'
 };
 
 export function getFeaturesBySprint() {

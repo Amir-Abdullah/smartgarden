@@ -28,6 +28,7 @@ async function main() {
           'tests/e2e/dashboard-f1-f5.test.js',
           'tests/e2e/sprint2-f6-f10.test.js',
           'tests/e2e/sprint3-f11-f15.test.js',
+          'tests/e2e/sprint4-f16-f20.test.js',
           'tests/e2e/coming-soon-and-edges.test.js'
         ],
         {

@@ -7,8 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- **Sprint 4 (`sprint4`):** Growth Journal & Photo Timeline (`F16`), Analytics & PDF/CSV Export (`F17`), AI Leaf Disease Diagnosis (`F18`), AI Gardening Assistant (`F19`), Community Hub & Moderation (`F20`).
 - **Sprint 5 (`sprint5`):** Multi-Channel Notifications (`F21`), Water & Sustainability Metrics (`F22`), Seed Vault (`F23`), Public Profiles & Scoped API Keys (`F24`), all 7 public pages + `/dashboard/help`, ORM upgrade, security headers/rate limiting, PWA, CI, MQTT, i18n, and ESP32 reference firmware.
+
+## [4.0.0] - 2026-11-25 (`sprint4`)
+
+### Added
+- **Schema, Binary/Multipart & Media Storage:** Additive migration `023_sprint4_media_and_likes.js` (`media_assets`, `community_post_likes`), 6 Sequelize models (`GrowthJournal`, `CommunityPost`, `CommunityComment`, `UserFollow`, `MediaAsset`, `CommunityPostLike`), binary `Buffer` multipart support in `fastify` (mirrored to `backend/vendor/fastify/index.js`), pure-JS `backend/utils/{multipartParser,csvGenerator,pdfGenerator}.js`, and `storageService.js` (Cloudflare R2 SigV4 adapter + DB `media_assets` fallback at `GET /api/media/:key`).
+- **F16 Growth Journal & Photo Timeline:** `journalService.js` & `routes/journal.js`, `JournalView.vue` (height progression SVG chart & timeline entries), and live garden journal feed in `GardenDetailView.vue` `Activity` tab.
+- **F17 Analytics & Data Export:** `analyticsService.js` (`runDailyTelemetryRollup` + >30d raw reading purge, `getGardenAnalytics`, CSV & valid PDF-1.4 export), `routes/analytics.js`, `0 1 * * *` scheduler task, `POST /api/jobs/telemetry-rollup`, and `AnalyticsView.vue` (preserving `?feature=F22` `ComingSoonView`).
+- **F18 AI Leaf Disease & Pest Diagnosis:** `POST /api/ai/diagnose-leaf` in `aiService.js` & `routes/ai.js` (Gemini Vision adapter + structured deterministic fallback) and `AiDiagnosisView.vue`.
+- **F19 AI Gardening Assistant:** `POST /api/ai/chat` in `aiService.js` & `routes/ai.js` (live garden/zone/crop/sensor/alert grounding context, RBAC membership guard, per-user rate limiting, deterministic agronomy fallback) and `AiAssistantView.vue`.
+- **F20 Community Hub, Social Feed & Moderation:** `communityService.js` & `routes/community.js` (category/search/following feed, like toggle, threaded comments, follow/unfollow blocking `CANNOT_FOLLOW_SELF`, admin pin/flag & comment deletion) and `CommunityView.vue`.
+- **Tests & State:** `backend/tests/sprint4_f16_f20.test.js` (`5` tests, `122/122` total backend passing), `frontend/tests/e2e/sprint4-f16-f20.test.js` (`5` tests, `33/33` total E2E passing), and `frontend/src/stores/sprint4.js`.
+
+### Changed
+- Updated `.env.example` with Cloudflare R2 (`R2_*`) and Gemini (`GEMINI_API_KEY`, `GEMINI_MODEL`) placeholders.
+- Updated `frontend/src/services/api.js` (`FormData` boundary header fix), `frontend/src/config/features.js` (`F16`–`F20` live -> `20 Live / 4 Soon`), `frontend/src/router/index.js`, `LandingView.vue`, `OverviewView.vue`, and `backend/scripts/seed-demo.js` (idempotent Sprint 4 demo user `Maya Lin`, tomato journal entries, 5d aggregates, and community posts/comments).
 
 ## [3.0.0] - 2026-11-25 (`sprint3`)
 

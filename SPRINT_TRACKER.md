@@ -4,10 +4,10 @@
 
 ## 1. Resume Header & Active Checkpoint
 
-- **Active Sprint:** Sprint 3 (`sprint3` branch) — Horticultural Intelligence (`F11`–`F15`)
-- **Base Branch / Commit:** `sprint2` -> `sprint3` (chained from `main` @ `7653b4fd55c2fde36182d17daa9c9f0d629f07d3`)
-- **Status:** `VERIFIED_READY_FOR_PUSH` (Sprint 2 + Sprint 3 code, unit/integration tests `117/117`, Chrome CDP E2E `28/28`, Vite build `994` modules, and migration/seed idempotency `0` Run 2 mutations all passed in `BypassSandbox: false`; ready for Sprint 4 `F16`–`F20`)
-- **Next Action on Resume:** Branch & push `sprint2`/`sprint3` (leaving `main` untouched until all manual human testing completes), then start **Sprint 4 (`F16`–`F20`)**.
+- **Active Sprint:** Sprint 4 (`sprint4` branch) — Media, Analytics, AI & Community (`F16`–`F20`)
+- **Base Branch / Commit:** `main` (`7653b4fd`) -> `sprint2` (`f983e0e`) -> `sprint3` (`36a3f44`) -> `sprint4`
+- **Status:** `VERIFIED_READY_FOR_PUSH` (Backend `122/122` across `30` suites, Chrome CDP E2E `33/33` across `7` suites, Vite build `1000` modules, migration/seed idempotency `23` migrations / `0` Run 2 mutations, and vendor parity `14/14` matched all passed in `BypassSandbox: false`)
+- **Next Action on Resume:** Start **Sprint 5 (`sprint5` from `sprint4`)** — `F21`–`F24`, all 7 public Coming Soon pages + `/dashboard/help`, ORM upgrade, security hardening, PWA, CI, and MQTT/i18n/ESP32 deliverables.
 
 ---
 
@@ -19,9 +19,9 @@
 |---|---|---|---|---|---|
 | `main` | — | `7653b4fd55c2fde36182d17daa9c9f0d629f07d3` | Pushed (`origin/main`) | — | Sprint 1 foundation baseline |
 | `sprint1` | `main` | `7653b4fd55c2fde36182d17daa9c9f0d629f07d3` | Pushed (`origin/sprint1`) | No | Sprint 1 archive branch |
-| `sprint2` | `main` | Staged via `scripts/git-deliver-sprints.ps1` | Verified & ready (`-DryRun` PASS) | **No** | Pre-Sprint-2 docs (`Document/*.md` + `vercel.json`), F6–F10, `S2-X`, `R6` |
-| `sprint3` | `sprint2` | Verified working tree | Verified & ready (`BypassSandbox: false` PASS) | **No** | F11–F15 Horticultural Intelligence (`117/117` backend, `28/28` E2E) |
-| `sprint4` | `sprint3` | `pending` | Pending | **No** | F16–F20 Media, Analytics, AI & Community |
+| `sprint2` | `main` | `23f77c6` + `f983e0e` | Pushed (`origin/sprint2`) | **No** | Pre-Sprint-2 docs (`Document/*.md` + `vercel.json`), F6–F10, `S2-X`, `R6` |
+| `sprint3` | `sprint2` | `36a3f44` | Pushed (`origin/sprint3`) | **No** | F11–F15 Horticultural Intelligence (`117/117` backend, `28/28` E2E) |
+| `sprint4` | `sprint3` | Prepared via `scripts/git-deliver-sprints.ps1 -Sprint sprint4` | Ready to push (`origin/sprint4`) | **No** | F16–F20 Media, Analytics, AI & Community (`122/122` backend, `33/33` E2E) |
 | `sprint5` | `sprint4` | `pending` | Pending | **No** | F21–F24, `PUB-7` public pages & hardening |
 
 ---
@@ -81,18 +81,42 @@
   - Registered F11–F15 routes in `backend/server.js`, added idempotent Sprint 3 demo weather cache & `CARE_PLAN` task to `backend/scripts/seed-demo.js`.
   - Updated `frontend/src/config/features.js` (`F1`–`F15` live, `15 Live / 9 Soon`), `frontend/src/router/index.js`, `frontend/src/stores/gardens.js` (`fetchZones`), `LandingView.vue`, and `OverviewView.vue`.
 
+### Sprint 4 — Media, Analytics, AI & Community (`F16`–`F20`)
+- [x] **S4-INFRA Schema, Binary/Multipart & Storage:**
+  - Additive migration `backend/migrations/023_sprint4_media_and_likes.js` (`media_assets`, `community_post_likes`).
+  - 6 Sequelize models (`GrowthJournal`, `CommunityPost`, `CommunityComment`, `UserFollow`, `MediaAsset`, `CommunityPostLike`) wired in `backend/models/index.js`.
+  - Updated `node_modules/fastify/index.js` + `backend/vendor/fastify/index.js` for raw binary `Buffer` multipart parsing & `rawPayload` responses, plus pure-JS `backend/utils/{multipartParser,csvGenerator,pdfGenerator}.js` and `backend/services/storageService.js` (Cloudflare R2 SigV4 adapter + DB `media_assets` fallback).
+- [x] **F16 Growth Journal & Photo Timeline:**
+  - Backend: `backend/services/journalService.js`, `backend/routes/journal.js` (`GET/POST/PUT/DELETE /api/plants/:id/journal`, `GET /api/gardens/:id/journal`, public `GET /api/media/:key`).
+  - Frontend: `frontend/src/views/dashboard/JournalView.vue` & live `GardenDetailView.vue` `Activity` tab.
+- [x] **F17 Analytics & Data Export:**
+  - Backend: `backend/services/analyticsService.js` (`runDailyTelemetryRollup` + >30d pruning, `getGardenAnalytics`, CSV & PDF-1.4 exports), `backend/routes/analytics.js`, 01:00 UTC cron schedule in `backend/jobs/scheduler.js`, `POST /api/jobs/telemetry-rollup` in `backend/routes/jobs.js`.
+  - Frontend: `frontend/src/views/dashboard/AnalyticsView.vue` (preserves `?feature=F22` `ComingSoonView` alias).
+- [x] **F18 AI Leaf Disease & Pest Diagnosis:**
+  - Backend: `POST /api/ai/diagnose-leaf` in `backend/services/aiService.js` & `backend/routes/ai.js` (Gemini Vision adapter + structured deterministic fallback when `GEMINI_API_KEY` is unset).
+  - Frontend: `frontend/src/views/dashboard/AiDiagnosisView.vue`.
+- [x] **F19 AI Gardening Assistant:**
+  - Backend: `POST /api/ai/chat` in `backend/services/aiService.js` & `backend/routes/ai.js` (live garden/zone/crop/sensor/alert context injection, RBAC garden guard, per-user rate limit `429`, deterministic agronomy fallback).
+  - Frontend: `frontend/src/views/dashboard/AiAssistantView.vue`.
+- [x] **F20 Community Hub, Social Feed & Moderation:**
+  - Backend: `backend/services/communityService.js`, `backend/routes/community.js` (paginated/filtered feed, toggleable likes, threaded comments, user follow/unfollow blocking `CANNOT_FOLLOW_SELF`, admin pin/flag & comment deletion).
+  - Frontend: `frontend/src/views/dashboard/CommunityView.vue`.
+- [x] **S4-X Sprint 4 Cross-Cutting:**
+  - Registered Sprint 4 routes in `backend/server.js`, added `ensureSprint4DemoData` (`Maya Lin`, 3 tomato journal entries, 5d aggregates, 3 community posts, 2 threaded comments) to `backend/scripts/seed-demo.js`.
+  - Updated `frontend/src/services/api.js` (FormData boundary preservation), `frontend/src/config/features.js` (`20 Live / 4 Soon`), `frontend/src/stores/{sprint4,index}.js`, `frontend/src/router/index.js`, `LandingView.vue`, and `OverviewView.vue`.
+
 ---
 
 ## 4. Verification Outcomes Log
 
 | Component / Gate | Command | Result | Notes |
 |---|---|---|---|
-| Sprint 3 Backend Suite | `npm test` | **PASS** (`117/117` across `29` suites) | Includes new `backend/tests/sprint3_f11_f15.test.js` on SQLite `:memory:` |
+| Sprint 4 Backend Suite | `npm test` | **PASS** (`122/122` across `30` suites) | Includes `backend/tests/sprint4_f16_f20.test.js` (`5` comprehensive tests on SQLite `:memory:`) |
 | M1-C In-Process Full-Stack Integration | `node --test --test-reporter=spec frontend/tests/integration/f6-f10-fullstack.test.mjs` | **PASS** (`5/5` journeys) | Real Pinia + Vue Router + `app.inject` / `app.injectWs` |
-| Sprint 3 Frontend Build | `npm --prefix frontend run build` | **PASS** (`0` errors, `994` modules) | Vite production bundle |
-| Sprint 3 Migrate & Seed Idempotency | `migrate.js` x2 & `seed-demo.js` x2 on fresh temp SQLite | **PASS** (`22` migrations, `0` Run 2 mutations) | Includes `sprint3` `weatherCacheEntries` & `carePlanTasks` |
-| Sprint 3 Chrome CDP E2E Suite | `$env:DB_DIALECT='sqlite'; $env:DB_STORAGE=':memory:'; npm --prefix frontend run test:e2e` | **PASS** (`28/28` across `6` suites) | Covers `auth-flows` (`2`), `coming-soon-and-edges` (`3`), `dashboard-f1-f5` (`7`), `public-pages` (`5`), `sprint2-f6-f10` (`6`), `sprint3-f11-f15` (`5`) |
-| M1-C Vendor Parity | SHA-256 check `backend/vendor/` vs `node_modules/` | **PASS** (`14/14` matched) | Pure-JS modules |
+| Sprint 4 Frontend Build | `npm --prefix frontend run build` | **PASS** (`0` errors, `1000` modules) | Vite production bundle |
+| Sprint 4 Migrate & Seed Idempotency | `migrate.js` x2 & `seed-demo.js` x2 on fresh temp SQLite | **PASS** (`23` migrations, `0` Run 2 mutations) | Verified `media_assets` & `community_post_likes` + `sprint4` seeds |
+| Sprint 4 Chrome CDP E2E Suite | `$env:DB_DIALECT='sqlite'; $env:DB_STORAGE=':memory:'; npm --prefix frontend run test:e2e` | **PASS** (`33/33` across `7` suites) | Includes new `sprint4-f16-f20.test.js` (`5` tests) |
+| Vendor Parity | SHA-256 check `backend/vendor/` vs `node_modules/` | **PASS** (`14/14` matched) | Pure-JS modules incl. updated `fastify/index.js` |
 
 ---
 
@@ -106,20 +130,17 @@
    - The current `sequelize` shim returns `{ changes, rowCount, rows }` from `sequelize.query()`, lacks `QueryInterface.addColumn` / `Model.upsert` / `Op.iLike` / `Op.between` / `Op.notIn`, and ignores nested `where` inside `include`. Use `backend/utils/dbHelpers.js` and strictly additive `022+` migrations until Sprint 5 (`S5-ORM`).
 3. **SMTP Email Alerts (`F9`):**
    - Leaving `SMTP_HOST` empty activates `EmailService:ConsoleFallback` (logs full alert email payload cleanly to stdout). Setting `SMTP_HOST` (+ optional `SMTP_USER`/`SMTP_PASS`) enables real Nodemailer SMTP transport.
-4. **Realtime Transport (`F8`) & Cron Jobs (`F10`/`F7`):**
+4. **Media Storage (`F16`/`F18`/`F20`) & AI Providers (`F18`/`F19`):**
+   - Setting `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_BUCKET_NAME` uploads photos to Cloudflare R2 via AWS SigV4; leaving them blank persists binary assets safely in `media_assets` served at `/api/media/:key`.
+   - Setting `GEMINI_API_KEY` enables Gemini Vision & Gemini Chat; leaving it blank uses deterministic structured fallbacks with `provider: 'deterministic-fallback'`.
+5. **Realtime Transport (`F8`) & Cron Jobs (`F7`/`F10`/`F11`/`F17`):**
    - Primary transport is WebSocket (`/ws/gardens/:gardenId?token=`); frontend `realtime.js` automatically falls back to SSE (`/api/gardens/:gardenId/stream?token=`) after 2 pre-open WS failures or when `VITE_REALTIME_TRANSPORT=sse`.
-   - Background cron jobs run automatically when `ENABLE_SCHEDULER=true`, or can be triggered explicitly via `POST /api/jobs/evaluate-rules` and `POST /api/jobs/device-watchdog` with header `X-Cron-Secret: <CRON_SECRET>`.
+   - Background cron jobs run automatically when `ENABLE_SCHEDULER=true`, or can be triggered explicitly via `/api/jobs/{evaluate-rules,device-watchdog,weather-watchdog,telemetry-rollup}` with `X-Cron-Secret: <CRON_SECRET>`.
 
 ---
 
-## 6. Remaining Work (Sprints 4–5)
+## 6. Remaining Work (Sprint 5)
 
-- **Sprint 4 (`sprint4` from `sprint3`) — F16–F20 Media, Analytics, AI & Community:**
-  - `F16` Growth Journal & Photo Timeline (`@fastify/multipart`, `sharp`, Cloudflare R2 S3 adapter + `media_assets` DB/local fallback, `JournalView.vue`).
-  - `F17` Analytics & Data Export (01:00 UTC daily rollup + 30-day purge, `pdfkit` PDF + `json2csv` CSV export, `AnalyticsView.vue`).
-  - `F18` AI Leaf Disease & Pest Diagnosis (`POST /api/ai/diagnose-leaf`, Gemini Vision adapter + deterministic offline fallback, `AiDiagnosisView.vue`).
-  - `F19` AI Gardening Assistant (`POST /api/ai/chat`, context-grounded Gemini adapter + deterministic fallback, `AiAssistantView.vue`).
-  - `F20` Community Hub, Social Feed & Moderation (`CommunityView.vue`).
 - **Sprint 5 (`sprint5` from `sprint4`) — F21–F24, Public Pages & Hardening:**
   - `F21` Multi-Channel Notifications, `F22` Water & Sustainability Metrics, `F23` Seed Vault & Germination Logs, `F24` Public Profiles & Scoped API Keys (`sg_pat_`).
   - `PUB-7`: Replace all 7 `PUBLIC_COMING_SOON_PAGES` + `/dashboard/help` `ComingSoonView` placeholders with real views.

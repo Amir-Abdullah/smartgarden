@@ -119,6 +119,10 @@ function buildServer(opts = {}) {
   const carePlansRoutes = require('./routes/carePlans');
   const recommendationsRoutes = require('./routes/recommendations');
   const companionsRoutes = require('./routes/companions');
+  const journalRoutes = require('./routes/journal');
+  const analyticsRoutes = require('./routes/analytics');
+  const aiRoutes = require('./routes/ai');
+  const communityRoutes = require('./routes/community');
   const wsTransport = require('./realtime/wsTransport');
   const sseTransport = require('./realtime/sseTransport');
 
@@ -140,6 +144,10 @@ function buildServer(opts = {}) {
   app.register(carePlansRoutes, { prefix: '/api' });
   app.register(recommendationsRoutes, { prefix: '/api' });
   app.register(companionsRoutes, { prefix: '/api' });
+  app.register(journalRoutes, { prefix: '/api' });
+  app.register(analyticsRoutes, { prefix: '/api' });
+  app.register(aiRoutes, { prefix: '/api' });
+  app.register(communityRoutes, { prefix: '/api' });
   app.register(wsTransport, { prefix: '/api' });
   app.register(sseTransport, { prefix: '/api' });
 
@@ -161,6 +169,10 @@ function buildServer(opts = {}) {
   app.register(carePlansRoutes);
   app.register(recommendationsRoutes);
   app.register(companionsRoutes);
+  app.register(journalRoutes);
+  app.register(analyticsRoutes);
+  app.register(aiRoutes);
+  app.register(communityRoutes);
   app.register(wsTransport);
   app.register(sseTransport);
 

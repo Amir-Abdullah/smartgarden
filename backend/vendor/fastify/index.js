@@ -126,10 +126,14 @@ class FastifyReply {
     }
 
     if (this._resolveInject) {
+      const rawPayload = Buffer.isBuffer(body)
+        ? body
+        : Buffer.from(body !== undefined && body !== null ? String(body) : '', 'utf8');
       this._resolveInject({
         statusCode: this.statusCode,
         headers: this._headers,
-        payload: String(body !== undefined ? body : ''),
+        rawPayload,
+        payload: Buffer.isBuffer(body) ? body.toString('latin1') : String(body !== undefined ? body : ''),
         json: () => {
           try {
             return JSON.parse(body);
@@ -352,16 +356,32 @@ class FastifyInstance {
       }
     }
     const isJsonHeader = contentType.includes('application/json');
+    const isMultipartHeader = contentType.includes('multipart/form-data');
+
+    let rawBuffer;
+    if (Buffer.isBuffer(rawBody)) {
+      rawBuffer = rawBody;
+    } else if (typeof rawBody === 'string') {
+      rawBuffer = Buffer.from(rawBody, 'utf8');
+    } else if (rawBody !== null && typeof rawBody === 'object') {
+      rawBuffer = Buffer.from(JSON.stringify(rawBody), 'utf8');
+    } else {
+      rawBuffer = Buffer.alloc(0);
+    }
 
     let body = rawBody;
     let bodyParseError = null;
 
-    if (typeof rawBody === 'string') {
-      const trimmed = rawBody.trim();
+    if (isMultipartHeader) {
+      body = rawBuffer;
+    } else if (Buffer.isBuffer(rawBody) || typeof rawBody === 'string') {
+      const rawText = Buffer.isBuffer(rawBody) ? rawBody.toString('utf8') : rawBody;
+      body = rawText;
+      const trimmed = rawText.trim();
       if (isJsonHeader) {
         if (trimmed.length > 0) {
           try {
-            body = JSON.parse(rawBody);
+            body = JSON.parse(rawText);
           } catch (parseErr) {
             bodyParseError = new Error('Invalid or malformed JSON payload');
             bodyParseError.statusCode = 400;
@@ -371,7 +391,7 @@ class FastifyInstance {
         }
       } else if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
         try {
-          body = JSON.parse(rawBody);
+          body = JSON.parse(rawText);
         } catch { }
       }
     }
@@ -379,6 +399,7 @@ class FastifyInstance {
     const matched = this._matchRoute(method, pathname);
 
     const request = new FastifyRequest(req, matched ? matched.params : {}, query, body);
+    request.rawBody = rawBuffer;
     request.routerPath = matched ? matched.route.path : '';
     for (const [k, v] of Object.entries(this._requestDecorators)) {
       request[k] = typeof v === 'function' ? v.bind(request) : v;
@@ -640,11 +661,13 @@ class FastifyInstance {
 
     return new Promise((resolve, reject) => {
       this._server = http.createServer((req, res) => {
-        let rawBody = '';
-        req.on('data', chunk => { rawBody += chunk; });
+        const chunks = [];
+        req.on('data', chunk => {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        });
         req.on('end', () => {
           const reply = new FastifyReply(res);
-          this._handleRequest(req, req.method, req.url, rawBody, reply);
+          this._handleRequest(req, req.method, req.url, Buffer.concat(chunks), reply);
         });
       });
 

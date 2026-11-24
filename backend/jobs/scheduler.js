@@ -2,6 +2,7 @@ const { Device, Zone, DeviceWatchdogAlert } = require('../models');
 const eventBus = require('../services/eventBus');
 const ruleEngineService = require('../services/ruleEngineService');
 const weatherService = require('../services/weatherService');
+const analyticsService = require('../services/analyticsService');
 
 const OFFLINE_THRESHOLD_MS = 2 * 60 * 60 * 1000;
 const ALERT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
@@ -114,8 +115,16 @@ function startScheduler() {
     }
   });
 
-  scheduledTasks = [ruleTask, watchdogTask, weatherWatchdogTask];
-  console.log('[Scheduler] Started rule evaluation (*/15), device watchdog (*/30), and weather watchdog (0 */6) jobs.');
+  const telemetryRollupTask = cron.schedule('0 1 * * *', async () => {
+    try {
+      await analyticsService.runDailyTelemetryRollup();
+    } catch (err) {
+      console.error('[Scheduler] Daily telemetry rollup job error:', err.message);
+    }
+  });
+
+  scheduledTasks = [ruleTask, watchdogTask, weatherWatchdogTask, telemetryRollupTask];
+  console.log('[Scheduler] Started rule evaluation (*/15), device watchdog (*/30), weather watchdog (0 */6), and telemetry rollup (0 1) jobs.');
   return scheduledTasks;
 }
 

@@ -29,6 +29,11 @@ import CalendarView from '../views/dashboard/CalendarView.vue';
 import CarePlansView from '../views/dashboard/CarePlansView.vue';
 import RecommendationsView from '../views/dashboard/RecommendationsView.vue';
 import CompanionsView from '../views/dashboard/CompanionsView.vue';
+import JournalView from '../views/dashboard/JournalView.vue';
+import AnalyticsView from '../views/dashboard/AnalyticsView.vue';
+import AiDiagnosisView from '../views/dashboard/AiDiagnosisView.vue';
+import AiAssistantView from '../views/dashboard/AiAssistantView.vue';
+import CommunityView from '../views/dashboard/CommunityView.vue';
 import SettingsView from '../views/dashboard/SettingsView.vue';
 
 import ComingSoonView from '../views/ComingSoonView.vue';
@@ -252,31 +257,31 @@ const routes = [
       {
         path: 'journal',
         name: 'Journal',
-        component: ComingSoonView,
+        component: JournalView,
         meta: { requiresAuth: true, feature: 'F16', title: 'Growth Journal & Photo Timeline' }
       },
       {
         path: 'analytics',
         name: 'Analytics',
-        component: ComingSoonView,
+        component: AnalyticsView,
         meta: { requiresAuth: true, feature: 'F17', title: 'Analytics & Data Export' }
       },
       {
         path: 'ai-diagnosis',
         name: 'AiDiagnosis',
-        component: ComingSoonView,
+        component: AiDiagnosisView,
         meta: { requiresAuth: true, feature: 'F18', title: 'AI Leaf Disease & Pest Diagnosis' }
       },
       {
         path: 'ai-assistant',
         name: 'AiAssistant',
-        component: ComingSoonView,
+        component: AiAssistantView,
         meta: { requiresAuth: true, feature: 'F19', title: 'AI Gardening Assistant' }
       },
       {
         path: 'community',
         name: 'Community',
-        component: ComingSoonView,
+        component: CommunityView,
         meta: { requiresAuth: true, feature: 'F20', title: 'Community Hub & Social Feed' }
       },
       {

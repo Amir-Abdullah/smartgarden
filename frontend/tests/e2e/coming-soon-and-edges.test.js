@@ -3,17 +3,12 @@ import assert from 'node:assert/strict';
 import { createSuiteSession, assertCleanRuntime, loginAsDemo } from '../helpers/e2e-context.js';
 
 const COMING_SOON_ROUTES = [
-  { path: '/dashboard/journal', title: 'Growth Journal & Photo Timeline', code: 'F16', sprint: 'Coming in Sprint 4' },
-  { path: '/dashboard/analytics', title: 'Analytics & Data Export', code: 'F17', sprint: 'Coming in Sprint 4' },
-  { path: '/dashboard/ai-diagnosis', title: 'AI Leaf Disease & Pest Diagnosis', code: 'F18', sprint: 'Coming in Sprint 4' },
-  { path: '/dashboard/ai-assistant', title: 'AI Gardening Assistant', code: 'F19', sprint: 'Coming in Sprint 4' },
-  { path: '/dashboard/community', title: 'Community Hub & Social Feed', code: 'F20', sprint: 'Coming in Sprint 4' },
   { path: '/dashboard/analytics?feature=F22', title: 'Water & Sustainability Metrics', code: 'F22', sprint: 'Coming in Sprint 5' },
   { path: '/dashboard/calendar?feature=F23', title: 'Seed Vault & Germination Logs', code: 'F23', sprint: 'Coming in Sprint 5' },
   { path: '/dashboard/help', title: 'Help Center', code: null, sprint: 'Coming in Sprint 2' }
 ];
 
-describe('E2E: F16-F23 Coming Soon Routes, Legacy Redirects & 404 Edge Routes', () => {
+describe('E2E: F22-F23 Coming Soon Routes, Legacy Redirects & 404 Edge Routes', () => {
   let session;
   let page;
 

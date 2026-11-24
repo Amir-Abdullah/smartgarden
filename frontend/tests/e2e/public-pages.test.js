@@ -24,7 +24,7 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     const body = await page.getBodyText();
 
     // Stat strip
-    for (const stat of ['32+', '15 Live', '3 Tiers', '9 Soon']) {
+    for (const stat of ['32+', '20 Live', '3 Tiers', '4 Soon']) {
       assert.ok(body.includes(stat), `Landing page missing stat "${stat}"`);
     }
 
@@ -35,26 +35,28 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     assert.ok(body.includes('Automation Rule Engine'), 'Missing F10 feature card');
     assert.ok(body.includes('Weather-Aware Planning & Spatial Cache'), 'Missing F11 feature card');
     assert.ok(body.includes('Companion Planting Advisor'), 'Missing F15 feature card');
+    assert.ok(body.includes('Growth Journal & Photo Timeline'), 'Missing F16 feature card');
+    assert.ok(body.includes('Community Hub & Social Feed'), 'Missing F20 feature card');
     assert.ok(body.includes('Public Profiles & Scoped API Keys'), 'Missing F24 feature card');
 
-    // Filter tabs: Live Now (F1-F15) vs Upcoming (F16-F24)
-    await page.clickButton('Live Now (F1–F15)');
-    await page.waitForTextGone('Growth Journal & Photo Timeline');
+    // Filter tabs: Live Now (F1-F20) vs Upcoming (F21-F24)
+    await page.clickButton('Live Now (F1–F20)');
+    await page.waitForTextGone('Public Profiles & Scoped API Keys');
     assert.ok((await page.getBodyText()).includes('Accounts & Security'));
-    assert.ok((await page.getBodyText()).includes('Weather-Aware Planning & Spatial Cache'));
+    assert.ok((await page.getBodyText()).includes('Growth Journal & Photo Timeline'));
 
-    await page.clickButton('Upcoming (F16–F24)');
-    await page.waitForText('Growth Journal & Photo Timeline');
+    await page.clickButton('Upcoming (F21–F24)');
+    await page.waitForText('Multi-Channel Notifications');
     assert.ok(!(await page.getBodyText()).includes('Accounts & Security'));
 
     // Click an upcoming feature card -> opens ComingSoonModal
     await page.eval(() => {
       const cards = Array.from(document.querySelectorAll('#features div, #features a'));
-      const f16 = cards.find((el) => (el.innerText || '').includes('Growth Journal & Photo Timeline') && el.className.includes('cursor-pointer'));
-      if (f16) f16.click();
+      const f21 = cards.find((el) => (el.innerText || '').includes('Multi-Channel Notifications') && el.className.includes('cursor-pointer'));
+      if (f21) f21.click();
     });
     await page.waitForText('Planned Capabilities');
-    await page.waitForText('Coming in Sprint 4');
+    await page.waitForText('Coming in Sprint 5');
     await page.clickButton('Close', { within: '[role="dialog"]' });
     await page.waitForTextGone('Planned Capabilities');
 
@@ -141,7 +143,7 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     assert.ok(body.includes('Sprint 1 — Live Foundation'));
     assert.ok(body.includes('Sprint 2 — Live Operations & Telemetry'));
     assert.ok(body.includes('Sprint 3 — Live Horticultural Intelligence'));
-    assert.ok(body.includes('Sprint 4 — Planned'));
+    assert.ok(body.includes('Sprint 4 — Live Media, Analytics, AI & Community'));
     assert.ok(body.includes('Sprint 5 — Planned'));
     assert.ok(body.includes('Accounts & Security'));
     assert.ok(body.includes('Public Profiles & Scoped API Keys'));
@@ -150,9 +152,9 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     await page.clickElementFromFn(
       () => {
         const cards = Array.from(document.querySelectorAll('#roadmap div'));
-        return cards.find((el) => (el.innerText || '').includes('Growth Journal & Photo Timeline') && el.className.includes('cursor-pointer')) || null;
+        return cards.find((el) => (el.innerText || '').includes('Multi-Channel Notifications') && el.className.includes('cursor-pointer')) || null;
       },
-      'Roadmap F16 card not found'
+      'Roadmap F21 card not found'
     );
     await page.waitForText('Planned Capabilities');
     await page.sleep(250);
