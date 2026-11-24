@@ -340,21 +340,21 @@
               </div>
             </UCard>
 
-            <!-- Weather Forecast Preview (F11, Sprint 3) -->
+            <!-- Growth Journal Preview (F16, Sprint 4) -->
             <UCard
               class="group relative cursor-pointer overflow-hidden transition-colors hover:border-emerald-400 dark:hover:border-emerald-700"
-              @click="open('F11')"
+              @click="open('F16')"
             >
               <template #header>
                 <div class="flex items-center justify-between gap-2">
                   <div class="flex items-center gap-2">
-                    <UIcon name="i-lucide-cloud-sun" class="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <UIcon name="i-lucide-notebook-pen" class="size-4 text-emerald-600 dark:text-emerald-400" />
                     <span class="text-sm font-semibold text-zinc-900 dark:text-white">
-                      Weather Forecast
+                      Growth Journal
                     </span>
                   </div>
                   <UBadge color="primary" variant="subtle" size="xs" icon="i-lucide-clock">
-                    Coming in Sprint 3
+                    Coming in Sprint 4
                   </UBadge>
                 </div>
               </template>
@@ -362,19 +362,19 @@
               <div class="relative">
                 <div class="space-y-2 opacity-65 transition-opacity group-hover:opacity-40">
                   <div class="flex items-center justify-between rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <span class="font-medium text-zinc-700 dark:text-zinc-300">7-Day Precipitation Outlook</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">Rain-delay integration</span>
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">Visual Photo Timeline</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Height &amp; health logs</span>
                   </div>
                   <div class="flex items-center justify-between rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <span class="font-medium text-zinc-700 dark:text-zinc-300">Overnight Frost Risk</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">24h early alert</span>
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">Harvest &amp; Water Export</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">PDF &amp; CSV reports</span>
                   </div>
                 </div>
 
                 <div class="mt-3 flex items-center justify-between text-xs">
-                  <span class="text-zinc-500 dark:text-zinc-400">Coordinate-accurate rainfall &amp; frost tracking</span>
+                  <span class="text-zinc-500 dark:text-zinc-400">Cloudflare R2 photos &amp; seasonal progress</span>
                   <span class="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-                    Preview Sprint 3
+                    Preview Sprint 4
                     <UIcon name="i-lucide-arrow-up-right" class="size-3.5" />
                   </span>
                 </div>

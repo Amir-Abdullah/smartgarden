@@ -72,6 +72,11 @@ export const useGardensStore = defineStore('gardens', {
       }
     },
 
+    async fetchZones(gardenId) {
+      const data = await this.fetchGardenDetail(gardenId);
+      return data.zones || [];
+    },
+
     async createGarden(payload) {
       this.actionLoading = true;
       this.error = null;

@@ -114,6 +114,11 @@ function buildServer(opts = {}) {
   const alertsRoutes = require('./routes/alerts');
   const rulesRoutes = require('./routes/rules');
   const jobsRoutes = require('./routes/jobs');
+  const weatherRoutes = require('./routes/weather');
+  const calendarRoutes = require('./routes/calendar');
+  const carePlansRoutes = require('./routes/carePlans');
+  const recommendationsRoutes = require('./routes/recommendations');
+  const companionsRoutes = require('./routes/companions');
   const wsTransport = require('./realtime/wsTransport');
   const sseTransport = require('./realtime/sseTransport');
 
@@ -130,6 +135,11 @@ function buildServer(opts = {}) {
   app.register(alertsRoutes, { prefix: '/api' });
   app.register(rulesRoutes, { prefix: '/api' });
   app.register(jobsRoutes, { prefix: '/api' });
+  app.register(weatherRoutes, { prefix: '/api' });
+  app.register(calendarRoutes, { prefix: '/api' });
+  app.register(carePlansRoutes, { prefix: '/api' });
+  app.register(recommendationsRoutes, { prefix: '/api' });
+  app.register(companionsRoutes, { prefix: '/api' });
   app.register(wsTransport, { prefix: '/api' });
   app.register(sseTransport, { prefix: '/api' });
 
@@ -146,6 +156,11 @@ function buildServer(opts = {}) {
   app.register(alertsRoutes);
   app.register(rulesRoutes);
   app.register(jobsRoutes);
+  app.register(weatherRoutes);
+  app.register(calendarRoutes);
+  app.register(carePlansRoutes);
+  app.register(recommendationsRoutes);
+  app.register(companionsRoutes);
   app.register(wsTransport);
   app.register(sseTransport);
 

@@ -163,14 +163,14 @@ export const FEATURES = [
     ]
   },
 
-  // Upcoming Features (F11 - F15, Sprint 3)
+  // Live Sprint 3 Features (F11 - F15)
   {
     id: 'F11',
     code: 'F11',
     slug: 'weather',
     title: 'Weather-Aware Planning & Spatial Cache',
     shortTitle: 'Weather',
-    status: 'soon',
+    status: 'live',
     sprint: 3,
     section: 'ops',
     icon: 'i-lucide-cloud-sun',
@@ -188,7 +188,7 @@ export const FEATURES = [
     slug: 'calendar',
     title: 'Seasonal Planting Calendar',
     shortTitle: 'Planting Calendar',
-    status: 'soon',
+    status: 'live',
     sprint: 3,
     section: 'ops',
     icon: 'i-lucide-calendar-days',
@@ -206,7 +206,7 @@ export const FEATURES = [
     slug: 'care-plan-generator',
     title: 'Personalized Care Plan Generator',
     shortTitle: 'Care Plans',
-    status: 'soon',
+    status: 'live',
     sprint: 3,
     section: 'insights',
     icon: 'i-lucide-sparkles',
@@ -224,7 +224,7 @@ export const FEATURES = [
     slug: 'plant-recommendations',
     title: 'Plant Recommendation Engine',
     shortTitle: 'Recommendations',
-    status: 'soon',
+    status: 'live',
     sprint: 3,
     section: 'insights',
     icon: 'i-lucide-compass',
@@ -242,7 +242,7 @@ export const FEATURES = [
     slug: 'companion-advisor',
     title: 'Companion Planting Advisor',
     shortTitle: 'Companion Advisor',
-    status: 'soon',
+    status: 'live',
     sprint: 3,
     section: 'insights',
     icon: 'i-lucide-heart-handshake',
@@ -524,7 +524,8 @@ export function getFeatureById(idOrSlug) {
 
 const SPRINT_LABELS = {
   1: 'Sprint 1 — Live Foundation',
-  2: 'Sprint 2 — Live Operations & Telemetry'
+  2: 'Sprint 2 — Live Operations & Telemetry',
+  3: 'Sprint 3 — Live Horticultural Intelligence'
 };
 
 export function getFeaturesBySprint() {

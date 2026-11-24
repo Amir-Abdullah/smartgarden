@@ -13,7 +13,7 @@
     >
       <template #headline>
         <UBadge color="primary" variant="subtle" size="lg" icon="i-lucide-sparkles">
-          Sprint 2 Live &bull; F1&ndash;F10 Operational Platform
+          Sprint 3 Live &bull; F1&ndash;F15 Horticultural Intelligence Platform
         </UBadge>
       </template>
 
@@ -37,8 +37,8 @@
     <UPageSection
       id="features"
       headline="Platform Capabilities"
-      title="24 Integrated Modules — 10 Live Today, 14 in Active Development"
-      description="Explore live core and IoT operations modules now and preview every upcoming weather, analytics, and AI module on our roadmap."
+      title="24 Integrated Modules — 15 Live Today, 9 in Active Development"
+      description="Explore live core, IoT telemetry, and horticultural intelligence modules now and preview every upcoming journal, analytics, and AI module on our roadmap."
     >
       <template #body>
         <div class="mb-8 flex flex-wrap items-center justify-center gap-2">
@@ -376,15 +376,15 @@ const heroLinks = computed(() => {
 
 const stats = [
   { value: '32+', label: 'Botanical Species' },
-  { value: '10 Live', label: 'Core & Ops (F1–F10)' },
+  { value: '15 Live', label: 'Core, Ops & Intelligence (F1–F15)' },
   { value: '3 Tiers', label: 'RBAC Collaboration' },
-  { value: '14 Soon', label: 'Horticulture & AI Roadmap' }
+  { value: '9 Soon', label: 'Journal, Analytics & AI Roadmap' }
 ];
 
 const featureFilters = [
   { label: 'All (24)', value: 'all' },
-  { label: 'Live Now (F1–F10)', value: 'live' },
-  { label: 'Upcoming (F11–F24)', value: 'soon' }
+  { label: 'Live Now (F1–F15)', value: 'live' },
+  { label: 'Upcoming (F16–F24)', value: 'soon' }
 ];
 
 const filteredFeatures = computed(() => {
@@ -439,7 +439,7 @@ const testimonials = [
 const faqItems = [
   {
     label: 'Which features are live right now vs. under development?',
-    content: 'Features F1–F10 are 100% live today: Authentication & Password Recovery (F1), Team Invitations & RBAC (F2), Gardens & Microclimate Zones (F3), the 32+ Species Plant Catalog (F4), Zone Crop Inventory (F5), Recurring Care Tasks & Watering (F6), IoT Sensor Ingestion & Telemetry (F7), Real-Time WebSocket Dashboard (F8), Smart Threshold Alerts & Quiet Hours (F9), and the Automation Rule Engine (F10). Features F11–F24 (Weather, Calendar, Care Plans, Recommendations, Journal, Analytics, AI, and Sprint 5 modules) are clearly badged with their target sprint.'
+    content: 'Features F1–F15 are 100% live today: Authentication & Password Recovery (F1), Team Invitations & RBAC (F2), Gardens & Microclimate Zones (F3), the 32+ Species Plant Catalog (F4), Zone Crop Inventory (F5), Recurring Care Tasks & Watering (F6), IoT Sensor Ingestion & Telemetry (F7), Real-Time WebSocket Dashboard (F8), Smart Threshold Alerts & Quiet Hours (F9), Automation Rule Engine (F10), Weather-Aware Planning & Spatial Cache (F11), Seasonal Planting Calendar (F12), Personalized Care Plan Generator (F13), Plant Recommendation Engine (F14), and Companion Planting Advisor (F15). Features F16–F24 (Journal, Analytics, AI, Community, and Sprint 5 modules) are clearly badged with their target sprint.'
   },
   {
     label: 'How does SmartGarden detect bed overcrowding?',

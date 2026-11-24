@@ -7,9 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- **Sprint 3 (`sprint3`):** Weather-Aware Planning & Spatial Cache (`F11`), Seasonal Planting Calendar & `.ics` export (`F12`), Personalized Care Plan Generator (`F13`), Plant Recommendation Engine (`F14`), Companion Planting Advisor (`F15`).
 - **Sprint 4 (`sprint4`):** Growth Journal & Photo Timeline (`F16`), Analytics & PDF/CSV Export (`F17`), AI Leaf Disease Diagnosis (`F18`), AI Gardening Assistant (`F19`), Community Hub & Moderation (`F20`).
 - **Sprint 5 (`sprint5`):** Multi-Channel Notifications (`F21`), Water & Sustainability Metrics (`F22`), Seed Vault (`F23`), Public Profiles & Scoped API Keys (`F24`), all 7 public pages + `/dashboard/help`, ORM upgrade, security headers/rate limiting, PWA, CI, MQTT, i18n, and ESP32 reference firmware.
+
+## [3.0.0] - 2026-11-25 (`sprint3`)
+
+### Added
+- **F11 Weather-Aware Planning & Spatial Cache:** `WeatherCache` model, `weatherService.js` (extensible `WEATHER_API_PROVIDER` defaulting to Open-Meteo with deterministic offline fallback, negative-zero normalized `grid_key`, 30m spatial cache, single-flight coalescing, hazard detection, outdoor 24h rain-skip with indoor exemption), `/api/weather`, `/api/gardens/:id/weather`, `/api/gardens/:id/weather/rain-skip`, `POST /api/jobs/weather-watchdog`, 6-hour cron schedule, F10 `ruleEngineService.rainLikely` integration, and `WeatherView.vue`.
+- **F12 Seasonal Planting Calendar:** `calendarService.js` (+6m Southern Hemisphere shift, indoor seed-start derivation, RFC 5545 `.ics` export), `/api/calendar`, `/api/calendar/export.ics`, and `CalendarView.vue`.
+- **F13 Personalized Care Plan Generator:** `carePlanService.js` (soil & sunlight multipliers, recommended water liters, idempotent `CARE_PLAN` task generation), `/api/zones/:zoneId/care-plans/*`, and `CarePlansView.vue`.
+- **F14 Plant Recommendation Engine:** `recommendationService.js` (100-point 5-factor compatibility scorer), `/api/zones/:zoneId/recommendations`, and `RecommendationsView.vue`.
+- **F15 Companion Planting Advisor:** `companionService.js` (group alias matching, $N \times N$ compatibility matrix, What-If candidate simulator), `/api/zones/:zoneId/companions*`, and `CompanionsView.vue`.
+- **Tests & Tooling:** `backend/tests/sprint3_f11_f15.test.js` (7 tests, `117/117` total backend passing), `frontend/tests/e2e/sprint3-f11-f15.test.js` (5 tests, `28/28` total E2E passing), and `frontend/src/stores/horticulture.js`.
+
+### Changed
+- Updated `frontend/src/config/features.js` (`F11`–`F15` live -> `15 Live / 9 Soon`), `frontend/src/router/index.js`, `frontend/src/stores/gardens.js` (`fetchZones`), `LandingView.vue`, `OverviewView.vue`, and `backend/scripts/seed-demo.js` (idempotent Sprint 3 demo weather cache & care-plan task).
 
 ## [2.0.0] - 2026-11-24 (`sprint2`)
 

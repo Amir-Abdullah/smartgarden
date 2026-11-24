@@ -28,11 +28,14 @@ const METRIC_TO_COLUMN = {
   LIGHT_LUX: 'light_lux'
 };
 
+const weatherService = require('./weatherService');
+
 /**
- * Sprint 2 stub — returns false. Replaced by F11 Weather Service in Sprint 3.
+ * F11 Weather Guard — checks spatial forecast cache for rain probability >= 60% or > 5mm.
  */
-async function rainLikely(_garden) {
-  return false;
+async function rainLikely(garden) {
+  const res = await weatherService.isRainLikely(garden);
+  return Boolean(res && res.rain_likely);
 }
 
 function compareMetric(value, operator, threshold) {

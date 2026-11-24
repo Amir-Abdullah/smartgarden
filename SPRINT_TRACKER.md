@@ -4,12 +4,10 @@
 
 ## 1. Resume Header & Active Checkpoint
 
-- **Active Sprint:** Sprint 2 (`sprint2` branch) — Operations, Telemetry, Real-Time, Alerts & Automation (`F6`–`F10`)
-- **Base Branch / Commit:** `main` @ `7653b4fd55c2fde36182d17daa9c9f0d629f07d3`
-- **Status:** `VERIFIED_READY_FOR_PUSH` (All Sprint 2 code, E2E specs, integration suite, build, and idempotency checks passed in `BypassSandbox: false`; `git-deliver-sprints.ps1 -Sprint sprint2 -DryRun` passed; live `BypassSandbox: true` git commit/push prompt timed out at 60s awaiting user permission)
-- **Pre-Sprint-2 Alignment Commit:** Staged plan ready in `scripts/git-deliver-sprints.ps1` (`6` files: 5 `Document/*.md` + `vercel.json`)
-- **Checkpoint Snapshot:** `C:\Users\Lenovo\.gemini\antigravity\scratch\teamwork\575761ee-de68-406a-8ffc-403dfada8b09\.sprint-checkpoints\sprint2\` (`98` files + `manifest.json`)
-- **Next Action on Resume:** Run `powershell -ExecutionPolicy Bypass -File scripts/git-deliver-sprints.ps1 -Sprint sprint2` locally to create `sprint2` from `main`, create Commit 1 (6 docs/vercel files) + Commit 2 (92 Sprint 2 deliverables), and push `origin/sprint2` (without merging into `main`), then branch `sprint3` from `sprint2` (`git checkout -b sprint3 sprint2`).
+- **Active Sprint:** Sprint 3 (`sprint3` branch) — Horticultural Intelligence (`F11`–`F15`)
+- **Base Branch / Commit:** `sprint2` -> `sprint3` (chained from `main` @ `7653b4fd55c2fde36182d17daa9c9f0d629f07d3`)
+- **Status:** `VERIFIED_READY_FOR_PUSH` (Sprint 2 + Sprint 3 code, unit/integration tests `117/117`, Chrome CDP E2E `28/28`, Vite build `994` modules, and migration/seed idempotency `0` Run 2 mutations all passed in `BypassSandbox: false`; ready for Sprint 4 `F16`–`F20`)
+- **Next Action on Resume:** Branch & push `sprint2`/`sprint3` (leaving `main` untouched until all manual human testing completes), then start **Sprint 4 (`F16`–`F20`)**.
 
 ---
 
@@ -21,8 +19,8 @@
 |---|---|---|---|---|---|
 | `main` | — | `7653b4fd55c2fde36182d17daa9c9f0d629f07d3` | Pushed (`origin/main`) | — | Sprint 1 foundation baseline |
 | `sprint1` | `main` | `7653b4fd55c2fde36182d17daa9c9f0d629f07d3` | Pushed (`origin/sprint1`) | No | Sprint 1 archive branch |
-| `sprint2` | `main` | Commit 1 (`6` files) / Commit 2 (`92` files) staged via `scripts/git-deliver-sprints.ps1` | Pending local run (`BypassSandbox: true` timed out after 60s; `-DryRun` PASS) | **No** | Pre-Sprint-2 docs (`Document/*.md` + `vercel.json`), F6–F10, `S2-X`, `R6` |
-| `sprint3` | `sprint2` | `pending` | Pending | **No** | F11–F15 Horticultural Intelligence |
+| `sprint2` | `main` | Staged via `scripts/git-deliver-sprints.ps1` | Verified & ready (`-DryRun` PASS) | **No** | Pre-Sprint-2 docs (`Document/*.md` + `vercel.json`), F6–F10, `S2-X`, `R6` |
+| `sprint3` | `sprint2` | Verified working tree | Verified & ready (`BypassSandbox: false` PASS) | **No** | F11–F15 Horticultural Intelligence (`117/117` backend, `28/28` E2E) |
 | `sprint4` | `sprint3` | `pending` | Pending | **No** | F16–F20 Media, Analytics, AI & Community |
 | `sprint5` | `sprint4` | `pending` | Pending | **No** | F21–F24, `PUB-7` public pages & hardening |
 
@@ -63,17 +61,37 @@
 - [x] **R6 Tracker, Changelog & Delivery Automation:**
   - `SPRINT_TRACKER.md`, `CHANGELOG.md`, updated `.env.example`, `scripts/git-deliver-sprints.ps1`.
 
+### Sprint 3 — Horticultural Intelligence (`F11`–`F15`)
+- [x] **F11 Weather-Aware Planning & Spatial Cache:**
+  - Backend: `backend/models/WeatherCache.js`, `backend/services/weatherService.js` (Open-Meteo adapter via `WEATHER_API_PROVIDER` + `registerWeatherProvider`, deterministic offline fallback, negative-zero normalized `grid_key`, 30m `weather_cache`, single-flight coalescing, frost/heatwave/high-wind/rain hazard analytics, outdoor 24h rain-skip with indoor exemption), `backend/routes/weather.js`, F10 `ruleEngineService.rainLikely` wiring, 6-hour `runSevereWeatherWatchdog` in `scheduler.js` + `POST /api/jobs/weather-watchdog`.
+  - Frontend: `frontend/src/stores/horticulture.js`, `frontend/src/views/dashboard/WeatherView.vue`.
+- [x] **F12 Seasonal Planting Calendar & `.ics` Export:**
+  - Backend: `backend/services/calendarService.js` (+6 month Southern Hemisphere shift, indoor seed-start derivation, RFC 5545 `text/calendar` `.ics` export), `backend/routes/calendar.js`.
+  - Frontend: `frontend/src/views/dashboard/CalendarView.vue` (preserves `?feature=F23` Seed Vault `ComingSoonView` alias).
+- [x] **F13 Personalized Care Plan Generator:**
+  - Backend: `backend/services/carePlanService.js` (soil drainage & sunlight multipliers, recommended water liters, idempotent `CARE_PLAN` task generation), `backend/routes/carePlans.js`.
+  - Frontend: `frontend/src/views/dashboard/CarePlansView.vue`.
+- [x] **F14 Plant Recommendation Engine:**
+  - Backend: `backend/services/recommendationService.js` (100-point 5-factor scorer across Sunlight 35, Season 25, Soil 15, Free Bed Area 15, Companion Guild 10), `backend/routes/recommendations.js`.
+  - Frontend: `frontend/src/views/dashboard/RecommendationsView.vue` (5-factor cards + 1-click Add to Zone).
+- [x] **F15 Companion Planting Advisor:**
+  - Backend: `backend/services/companionService.js` (botanical group alias resolution e.g. `Brassicas`/`Alliums`/`Aromatic Herbs`, $N \times N$ compatibility matrix, What-If candidate simulation), `backend/routes/companions.js`.
+  - Frontend: `frontend/src/views/dashboard/CompanionsView.vue`.
+- [x] **S3-X Sprint 3 Cross-Cutting:**
+  - Registered F11–F15 routes in `backend/server.js`, added idempotent Sprint 3 demo weather cache & `CARE_PLAN` task to `backend/scripts/seed-demo.js`.
+  - Updated `frontend/src/config/features.js` (`F1`–`F15` live, `15 Live / 9 Soon`), `frontend/src/router/index.js`, `frontend/src/stores/gardens.js` (`fetchZones`), `LandingView.vue`, and `OverviewView.vue`.
+
 ---
 
 ## 4. Verification Outcomes Log
 
 | Component / Gate | Command | Result | Notes |
 |---|---|---|---|
-| M1-A / M1-C Backend Tests | `npm test` | **PASS** (`110/110` across `28` suites) | SQLite `:memory:`, `BypassSandbox: false` |
-| M1-C In-Process Full-Stack Integration | `node --test --test-reporter=spec frontend/tests/integration/f6-f10-fullstack.test.mjs` | **PASS** (`5/5` journeys) | Real Pinia + Vue Router + `app.inject` / `app.injectWs` + `InProcessEventSource`, `BypassSandbox: false` |
-| M1-B / M1-C Frontend Build | `npm --prefix frontend run build` | **PASS** (`0` errors, `988` modules) | Vite production bundle, `BypassSandbox: false` |
-| M1-C Migrate & Seed Idempotency | `migrate.js` x2 & `seed-demo.js` x2 on fresh temp SQLite | **PASS** (`22` migrations, `0` Run 2 mutations) | Pre-existing non-demo user untouched |
-| M1-C Chrome CDP E2E Suite | `$env:DB_DIALECT='sqlite'; $env:DB_STORAGE=':memory:'; npm --prefix frontend run test:e2e` | **PASS** (`23/23` across `5` suites) | `auth-flows` (`2/2`), `coming-soon-and-edges` (`3/3`), `dashboard-f1-f5` (`7/7`), `public-pages` (`5/5`), `sprint2-f6-f10` (`6/6`), `BypassSandbox: false` |
+| Sprint 3 Backend Suite | `npm test` | **PASS** (`117/117` across `29` suites) | Includes new `backend/tests/sprint3_f11_f15.test.js` on SQLite `:memory:` |
+| M1-C In-Process Full-Stack Integration | `node --test --test-reporter=spec frontend/tests/integration/f6-f10-fullstack.test.mjs` | **PASS** (`5/5` journeys) | Real Pinia + Vue Router + `app.inject` / `app.injectWs` |
+| Sprint 3 Frontend Build | `npm --prefix frontend run build` | **PASS** (`0` errors, `994` modules) | Vite production bundle |
+| Sprint 3 Migrate & Seed Idempotency | `migrate.js` x2 & `seed-demo.js` x2 on fresh temp SQLite | **PASS** (`22` migrations, `0` Run 2 mutations) | Includes `sprint3` `weatherCacheEntries` & `carePlanTasks` |
+| Sprint 3 Chrome CDP E2E Suite | `$env:DB_DIALECT='sqlite'; $env:DB_STORAGE=':memory:'; npm --prefix frontend run test:e2e` | **PASS** (`28/28` across `6` suites) | Covers `auth-flows` (`2`), `coming-soon-and-edges` (`3`), `dashboard-f1-f5` (`7`), `public-pages` (`5`), `sprint2-f6-f10` (`6`), `sprint3-f11-f15` (`5`) |
 | M1-C Vendor Parity | SHA-256 check `backend/vendor/` vs `node_modules/` | **PASS** (`14/14` matched) | Pure-JS modules |
 
 ---
@@ -94,14 +112,8 @@
 
 ---
 
-## 6. Remaining Work (Sprints 3–5)
+## 6. Remaining Work (Sprints 4–5)
 
-- **Sprint 3 (`sprint3` from `sprint2`) — F11–F15 Horticultural Intelligence:**
-  - `F11` Weather-Aware Planning & Spatial Cache (Open-Meteo adapter, 1 km `grid_key`, 30m `weather_cache`, single-flight coalescing, 6h severe weather watchdog, 24h rain-skip & F10 `rainLikely` replacement, `WeatherView.vue`).
-  - `F12` Seasonal Planting Calendar & RFC 5545 `.ics` export (`CalendarView.vue`).
-  - `F13` Personalized Care Plan Generator (`ZonePlantsView.vue` integration).
-  - `F14` Plant Recommendation Engine (100-pt scorer + 1-click add).
-  - `F15` Companion Planting Advisor (pairwise synergy/conflict matrix + heatmap UI).
 - **Sprint 4 (`sprint4` from `sprint3`) — F16–F20 Media, Analytics, AI & Community:**
   - `F16` Growth Journal & Photo Timeline (`@fastify/multipart`, `sharp`, Cloudflare R2 S3 adapter + `media_assets` DB/local fallback, `JournalView.vue`).
   - `F17` Analytics & Data Export (01:00 UTC daily rollup + 30-day purge, `pdfkit` PDF + `json2csv` CSV export, `AnalyticsView.vue`).

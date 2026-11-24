@@ -3,11 +3,6 @@ import assert from 'node:assert/strict';
 import { createSuiteSession, assertCleanRuntime, loginAsDemo } from '../helpers/e2e-context.js';
 
 const COMING_SOON_ROUTES = [
-  { path: '/dashboard/weather', title: 'Weather-Aware Planning & Spatial Cache', code: 'F11', sprint: 'Coming in Sprint 3' },
-  { path: '/dashboard/calendar', title: 'Seasonal Planting Calendar', code: 'F12', sprint: 'Coming in Sprint 3' },
-  { path: '/dashboard/care-plans', title: 'Personalized Care Plan Generator', code: 'F13', sprint: 'Coming in Sprint 3' },
-  { path: '/dashboard/recommendations', title: 'Plant Recommendation Engine', code: 'F14', sprint: 'Coming in Sprint 3' },
-  { path: '/dashboard/companions', title: 'Companion Planting Advisor', code: 'F15', sprint: 'Coming in Sprint 3' },
   { path: '/dashboard/journal', title: 'Growth Journal & Photo Timeline', code: 'F16', sprint: 'Coming in Sprint 4' },
   { path: '/dashboard/analytics', title: 'Analytics & Data Export', code: 'F17', sprint: 'Coming in Sprint 4' },
   { path: '/dashboard/ai-diagnosis', title: 'AI Leaf Disease & Pest Diagnosis', code: 'F18', sprint: 'Coming in Sprint 4' },
@@ -18,7 +13,7 @@ const COMING_SOON_ROUTES = [
   { path: '/dashboard/help', title: 'Help Center', code: null, sprint: 'Coming in Sprint 2' }
 ];
 
-describe('E2E: F11-F23 Coming Soon Routes, Legacy Redirects & 404 Edge Routes', () => {
+describe('E2E: F16-F23 Coming Soon Routes, Legacy Redirects & 404 Edge Routes', () => {
   let session;
   let page;
 
@@ -33,7 +28,7 @@ describe('E2E: F11-F23 Coming Soon Routes, Legacy Redirects & 404 Edge Routes', 
     if (session) await session.teardown();
   });
 
-  it('All F11-F23 and Help dashboard Coming Soon routes render polished "Under Development" views', async () => {
+  it('All F16-F23 and Help dashboard Coming Soon routes render polished "Under Development" views', async () => {
     page.clearDiagnostics();
 
     for (const item of COMING_SOON_ROUTES) {

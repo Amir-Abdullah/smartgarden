@@ -22,8 +22,10 @@ const {
   WaterUsageLog,
   AlertConfig,
   AlertLog,
-  AutomationRule
+  AutomationRule,
+  WeatherCache
 } = require('../models');
+const weatherService = require('../services/weatherService');
 const { runMigrations } = require('./migrate');
 const { runSeed } = require('./seed');
 
@@ -676,6 +678,46 @@ async function ensureSprint2DemoData(demoUser, seededZonesByName) {
   return stats;
 }
 
+async function ensureSprint3DemoData(demoUser, seededZonesByName) {
+  const stats = {
+    weatherCacheEntries: 0,
+    carePlanTasks: 0
+  };
+
+  for (const gardenSpec of DEMO_GARDENS) {
+    if (gardenSpec.latitude == null || gardenSpec.longitude == null) continue;
+    const { latGrid, lngGrid, gridKey } = weatherService.computeGridKey(gardenSpec.latitude, gardenSpec.longitude);
+    const existingCache = await WeatherCache.findOne({ where: { grid_key: gridKey } });
+    if (!existingCache) {
+      await weatherService.getWeatherData(latGrid, lngGrid);
+      stats.weatherCacheEntries++;
+    }
+  }
+
+  const herbZone = seededZonesByName.get('Shaded Herb & Greens Border');
+  if (herbZone) {
+    const existingCarePlanTask = await CareTask.findOne({
+      where: { zone_id: herbZone.id, source: 'CARE_PLAN' }
+    });
+    if (!existingCarePlanTask) {
+      const dueStr = dateOffsetIso(1);
+      await CareTask.create({
+        zone_id: herbZone.id,
+        assigned_to: demoUser.id,
+        task_type: 'PRUNE',
+        due_date: dueStr,
+        recurrence_days: 10,
+        is_completed: false,
+        source: 'CARE_PLAN',
+        notes: '[CarePlan] Pinch mint and lettuce outer leaves to promote bushy canopy growth.'
+      });
+      stats.carePlanTasks++;
+    }
+  }
+
+  return stats;
+}
+
 async function runDemoSeed() {
   console.log('[Demo Seed] Connecting to database...');
   await dbConfig.connectDb();
@@ -740,6 +782,7 @@ async function runDemoSeed() {
   }
 
   summary.sprint2 = await ensureSprint2DemoData(demoUser, seededZonesByName);
+  summary.sprint3 = await ensureSprint3DemoData(demoUser, seededZonesByName);
 
   const totalCatalog = await PlantCatalog.count();
   const demoGardenCount = await Garden.count({ where: { owner_id: demoUser.id } });

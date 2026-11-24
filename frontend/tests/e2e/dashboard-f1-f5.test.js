@@ -83,11 +83,11 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
         const cards = Array.from(document.querySelectorAll('div'));
         return cards.find((el) => el.className.includes('cursor-pointer') && (el.innerText || '').includes(title)) || null;
       },
-      'Preview widget "Weather Forecast" not found',
-      'Weather Forecast'
+      'Preview widget "Growth Journal" not found',
+      'Growth Journal'
     );
     await page.waitForText('Planned Capabilities');
-    await page.waitForText('Coming in Sprint 3');
+    await page.waitForText('Coming in Sprint 4');
     await page.sleep(250);
     await page.clickButton('Close', { within: '[role="dialog"]' });
     await page.waitForTextGone('Planned Capabilities');

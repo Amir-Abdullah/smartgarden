@@ -24,6 +24,11 @@ import CareTasksView from '../views/dashboard/CareTasksView.vue';
 import SensorsView from '../views/dashboard/SensorsView.vue';
 import AlertsView from '../views/dashboard/AlertsView.vue';
 import AutomationsView from '../views/dashboard/AutomationsView.vue';
+import WeatherView from '../views/dashboard/WeatherView.vue';
+import CalendarView from '../views/dashboard/CalendarView.vue';
+import CarePlansView from '../views/dashboard/CarePlansView.vue';
+import RecommendationsView from '../views/dashboard/RecommendationsView.vue';
+import CompanionsView from '../views/dashboard/CompanionsView.vue';
 import SettingsView from '../views/dashboard/SettingsView.vue';
 
 import ComingSoonView from '../views/ComingSoonView.vue';
@@ -217,31 +222,31 @@ const routes = [
       {
         path: 'weather',
         name: 'Weather',
-        component: ComingSoonView,
+        component: WeatherView,
         meta: { requiresAuth: true, feature: 'F11', title: 'Weather-Aware Planning & Spatial Cache' }
       },
       {
         path: 'calendar',
         name: 'PlantingCalendar',
-        component: ComingSoonView,
+        component: CalendarView,
         meta: { requiresAuth: true, feature: 'F12', title: 'Seasonal Planting Calendar' }
       },
       {
         path: 'care-plans',
         name: 'CarePlans',
-        component: ComingSoonView,
+        component: CarePlansView,
         meta: { requiresAuth: true, feature: 'F13', title: 'Personalized Care Plan Generator' }
       },
       {
         path: 'recommendations',
         name: 'Recommendations',
-        component: ComingSoonView,
+        component: RecommendationsView,
         meta: { requiresAuth: true, feature: 'F14', title: 'Plant Recommendation Engine' }
       },
       {
         path: 'companions',
         name: 'Companions',
-        component: ComingSoonView,
+        component: CompanionsView,
         meta: { requiresAuth: true, feature: 'F15', title: 'Companion Planting Advisor' }
       },
       {

@@ -17,6 +17,7 @@ const AutomationRuleModel = require('./AutomationRule');
 const AlertConfigModel = require('./AlertConfig');
 const AlertLogModel = require('./AlertLog');
 const DeviceWatchdogAlertModel = require('./DeviceWatchdogAlert');
+const WeatherCacheModel = require('./WeatherCache');
 
 const User = UserModel(sequelize);
 const PasswordResetToken = PasswordResetTokenModel(sequelize);
@@ -35,6 +36,7 @@ const AutomationRule = AutomationRuleModel(sequelize);
 const AlertConfig = AlertConfigModel(sequelize);
 const AlertLog = AlertLogModel(sequelize);
 const DeviceWatchdogAlert = DeviceWatchdogAlertModel(sequelize);
+const WeatherCache = WeatherCacheModel(sequelize);
 
 // Sprint 1 Associations
 User.hasMany(PasswordResetToken, { foreignKey: 'user_id', as: 'resetTokens', onDelete: 'CASCADE' });
@@ -131,5 +133,6 @@ module.exports = {
   AutomationRule,
   AlertConfig,
   AlertLog,
-  DeviceWatchdogAlert
+  DeviceWatchdogAlert,
+  WeatherCache
 };

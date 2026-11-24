@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const ruleEngineService = require('../services/ruleEngineService');
+const weatherService = require('../services/weatherService');
 const scheduler = require('../jobs/scheduler');
 
 function verifyCronSecret(request, reply, done) {
@@ -62,6 +63,17 @@ async function jobRoutes(fastify) {
     preHandler: [verifyCronSecret]
   }, async (_request, reply) => {
     const result = await scheduler.runDeviceWatchdog();
+    return reply.send({
+      success: true,
+      data: result
+    });
+  });
+
+  // POST /api/jobs/weather-watchdog
+  fastify.post('/jobs/weather-watchdog', {
+    preHandler: [verifyCronSecret]
+  }, async (_request, reply) => {
+    const result = await weatherService.runSevereWeatherWatchdog();
     return reply.send({
       success: true,
       data: result
