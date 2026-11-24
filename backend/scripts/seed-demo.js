@@ -26,7 +26,12 @@ const {
   WeatherCache,
   GrowthJournal,
   CommunityPost,
-  CommunityComment
+  CommunityComment,
+  NotificationPreference,
+  Notification,
+  SustainabilityLog,
+  SeedPacket,
+  PublicProfile
 } = require('../models');
 const weatherService = require('../services/weatherService');
 const { runMigrations } = require('./migrate');
@@ -879,6 +884,165 @@ async function ensureSprint4DemoData(demoUser, seededZonesByName) {
   return stats;
 }
 
+async function ensureSprint5DemoData(demoUser, catalogBySciName) {
+  const stats = {
+    notifications: 0,
+    preferences: 0,
+    sustainabilityLogs: 0,
+    seedPackets: 0,
+    publicProfiles: 0
+  };
+
+  // 1. Notification preferences + inbox items
+  const existingPref = await NotificationPreference.findOne({ where: { user_id: demoUser.id } });
+  if (!existingPref) {
+    await NotificationPreference.create({
+      user_id: demoUser.id,
+      email_digest_freq: 'DAILY',
+      in_app_enabled: true,
+      web_push_enabled: false,
+      quiet_hours_start: '22:00',
+      quiet_hours_end: '07:00'
+    });
+    stats.preferences++;
+  }
+
+  const existingNotifs = await Notification.count({ where: { user_id: demoUser.id } });
+  if (existingNotifs === 0) {
+    await Notification.create({
+      user_id: demoUser.id,
+      channel: 'IN_APP',
+      category: 'WEATHER',
+      title: 'Forecast Advisory: Gentle Rain Window',
+      message: 'South Raised Bed outdoor watering schedules will auto-delay when 24h precipitation probability reaches 60%.',
+      is_read: false
+    });
+    await Notification.create({
+      user_id: demoUser.id,
+      channel: 'IN_APP',
+      category: 'SYSTEM',
+      title: 'Welcome to SmartGarden 3D & Seed Vault',
+      message: 'Explore your interactive 3D Garden Twin inside any garden workspace or manage heirloom packets in Seed Vault.',
+      is_read: true
+    });
+    stats.notifications += 2;
+  }
+
+  // 2. Sustainability logs for Sunny Backyard Oasis
+  const mainGarden = await Garden.findOne({
+    where: { owner_id: demoUser.id, name: 'Sunny Backyard Oasis' }
+  });
+  if (mainGarden) {
+    const existingSust = await SustainabilityLog.count({ where: { garden_id: mainGarden.id } });
+    if (existingSust === 0) {
+      await SustainabilityLog.create({
+        garden_id: mainGarden.id,
+        user_id: demoUser.id,
+        log_type: 'RAINWATER_HARVEST',
+        quantity: 220,
+        unit: 'liters',
+        estimated_water_saved_l: 220,
+        estimated_co2_offset_kg: 0.44,
+        recorded_date: dateOffsetIso(-5),
+        notes: 'Captured cistern overflow from spring shower event'
+      });
+      await SustainabilityLog.create({
+        garden_id: mainGarden.id,
+        user_id: demoUser.id,
+        log_type: 'COMPOST_ADDED',
+        quantity: 18,
+        unit: 'kg',
+        estimated_water_saved_l: 72,
+        estimated_co2_offset_kg: 32.4,
+        recorded_date: dateOffsetIso(-12),
+        notes: 'Finished backyard kitchen & leaf mold compost top-dressing'
+      });
+      await SustainabilityLog.create({
+        garden_id: mainGarden.id,
+        user_id: demoUser.id,
+        log_type: 'MULCH_SAVINGS',
+        quantity: 6,
+        unit: 'sq_m',
+        estimated_water_saved_l: 72,
+        estimated_co2_offset_kg: 2.7,
+        recorded_date: dateOffsetIso(-15),
+        notes: 'Straw mulch layer reducing bed surface evaporation'
+      });
+      stats.sustainabilityLogs += 3;
+    }
+
+    // 3. Seed Vault packets
+    const existingSeeds = await SeedPacket.count({ where: { user_id: demoUser.id } });
+    if (existingSeeds === 0) {
+      const tomato = catalogBySciName.get('Solanum lycopersicum');
+      const basil = catalogBySciName.get('Ocimum basilicum');
+      const carrot = catalogBySciName.get('Daucus carota');
+
+      await SeedPacket.create({
+        user_id: demoUser.id,
+        garden_id: mainGarden.id,
+        plant_catalog_id: tomato ? tomato.id : null,
+        variety_name: 'San Marzano Heirloom Tomato',
+        brand: 'Pacific Heirloom Seeds',
+        lot_number: 'LOT-2026-TM1',
+        quantity_packets: 2,
+        seeds_remaining: 45,
+        germination_rate_pct: 92,
+        purchased_date: dateOffsetIso(-60),
+        expiry_date: dateOffsetIso(420),
+        storage_location: 'Cool Cedar Seed Box',
+        notes: 'High-brix paste tomato for southern raised beds.'
+      });
+      await SeedPacket.create({
+        user_id: demoUser.id,
+        garden_id: mainGarden.id,
+        plant_catalog_id: basil ? basil.id : null,
+        variety_name: 'Sweet Genovese Organic Basil',
+        brand: 'Botanical Co-op',
+        lot_number: 'LOT-2026-BS4',
+        quantity_packets: 1,
+        seeds_remaining: 80,
+        germination_rate_pct: 88,
+        purchased_date: dateOffsetIso(-40),
+        expiry_date: dateOffsetIso(300),
+        storage_location: 'Cool Cedar Seed Box'
+      });
+      await SeedPacket.create({
+        user_id: demoUser.id,
+        garden_id: mainGarden.id,
+        plant_catalog_id: carrot ? carrot.id : null,
+        variety_name: 'Scarlet Nantes Root Carrot',
+        brand: 'Heritage Growers',
+        lot_number: 'LOT-2025-CR9',
+        quantity_packets: 1,
+        seeds_remaining: 4,
+        germination_rate_pct: 78,
+        purchased_date: dateOffsetIso(-200),
+        expiry_date: dateOffsetIso(25),
+        storage_location: 'Pantry Airtight Jar',
+        notes: 'Running low — finish sowing soon for peak germination.'
+      });
+      stats.seedPackets += 3;
+    }
+
+    // 4. Opt-in Public Profile for Demo Gardener (/u/demo-gardener)
+    const existingProfile = await PublicProfile.findOne({ where: { user_id: demoUser.id } });
+    if (!existingProfile) {
+      await PublicProfile.create({
+        user_id: demoUser.id,
+        handle: 'demo-gardener',
+        is_public: true,
+        bio: 'Zone 8b raised-bed polyculture grower experimenting with companion guilds, drip irrigation, and ESP32 soil sensors.',
+        featured_garden_id: mainGarden.id,
+        show_telemetry: true
+      });
+      stats.publicProfiles++;
+    }
+  }
+
+  return stats;
+}
+
 async function runDemoSeed() {
   console.log('[Demo Seed] Connecting to database...');
   await dbConfig.connectDb();
@@ -945,6 +1109,7 @@ async function runDemoSeed() {
   summary.sprint2 = await ensureSprint2DemoData(demoUser, seededZonesByName);
   summary.sprint3 = await ensureSprint3DemoData(demoUser, seededZonesByName);
   summary.sprint4 = await ensureSprint4DemoData(demoUser, seededZonesByName);
+  summary.sprint5 = await ensureSprint5DemoData(demoUser, catalogBySciName);
 
   const totalCatalog = await PlantCatalog.count();
   const demoGardenCount = await Garden.count({ where: { owner_id: demoUser.id } });

@@ -47,7 +47,7 @@
             <div class="space-y-1.5">
               <div class="flex flex-wrap items-center gap-2">
                 <UBadge color="primary" variant="subtle" size="sm" icon="i-lucide-sprout">
-                  Workspace Live &bull; F1&ndash;F20
+                  Workspace Live &bull; F1&ndash;F24 + 3D Twin
                 </UBadge>
                 <UBadge v-if="authStore.user?.location_region" color="neutral" variant="outline" size="sm" icon="i-lucide-map-pin">
                   {{ authStore.user.location_region }}
@@ -340,45 +340,35 @@
               </div>
             </UCard>
 
-            <!-- Multi-Channel Notifications Preview (F21, Sprint 5) -->
-            <UCard
-              class="group relative cursor-pointer overflow-hidden transition-colors hover:border-emerald-400 dark:hover:border-emerald-700"
-              @click="open('F21')"
-            >
+            <!-- Live Interactive 3D Garden Twin Preview -->
+            <UCard data-testid="overview-3d-twin-card">
               <template #header>
                 <div class="flex items-center justify-between gap-2">
                   <div class="flex items-center gap-2">
-                    <UIcon name="i-lucide-mail" class="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <UIcon name="i-lucide-box" class="size-4 text-emerald-600 dark:text-emerald-400" />
                     <span class="text-sm font-semibold text-zinc-900 dark:text-white">
-                      Multi-Channel Notifications
+                      Interactive 3D Garden Twin
                     </span>
                   </div>
-                  <UBadge color="primary" variant="subtle" size="xs" icon="i-lucide-clock">
-                    Coming in Sprint 5
-                  </UBadge>
+                  <UButton
+                    v-if="selectedLiveGardenId"
+                    :to="`/dashboard/gardens/${selectedLiveGardenId}`"
+                    size="xs"
+                    color="primary"
+                    variant="soft"
+                    trailing-icon="i-lucide-arrow-right"
+                  >
+                    Full 3D View
+                  </UButton>
                 </div>
               </template>
 
-              <div class="relative">
-                <div class="space-y-2 opacity-65 transition-opacity group-hover:opacity-40">
-                  <div class="flex items-center justify-between rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <span class="font-medium text-zinc-700 dark:text-zinc-300">Digest &amp; Web Push</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">Custom schedules</span>
-                  </div>
-                  <div class="flex items-center justify-between rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <span class="font-medium text-zinc-700 dark:text-zinc-300">SSRF-Safe Webhooks</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">Slack &amp; Discord</span>
-                  </div>
-                </div>
-
-                <div class="mt-3 flex items-center justify-between text-xs">
-                  <span class="text-zinc-500 dark:text-zinc-400">Unified inbox, push alerts &amp; scoped keys</span>
-                  <span class="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-                    Preview Sprint 5
-                    <UIcon name="i-lucide-arrow-up-right" class="size-3.5" />
-                  </span>
-                </div>
-              </div>
+              <GardenPlot3D
+                compact
+                :zones="liveZones"
+                :latest-readings-by-zone="sensorsStore.latestByZone"
+                garden-name="Overview 3D Twin"
+              />
             </UCard>
           </div>
         </div>
@@ -461,6 +451,7 @@ import { useAlertsStore } from '../../stores/alerts.js';
 import { useComingSoon } from '../../composables/useComingSoon.js';
 import realtimeService from '../../services/realtime.js';
 import AlertBellButton from '../../components/AlertBellButton.vue';
+import GardenPlot3D from '../../components/three/GardenPlot3D.vue';
 
 const router = useRouter();
 const toast = useToast();
@@ -472,6 +463,7 @@ const alertsStore = useAlertsStore();
 const { open } = useComingSoon();
 
 const selectedLiveGardenId = ref(null);
+let liveInitSeq = 0;
 
 const isCreateOpen = ref(false);
 const createError = ref('');
@@ -601,14 +593,18 @@ const realtimeBadgeLabel = computed(() => {
 async function initLiveGarden(gardenId) {
   const gid = Number(gardenId);
   if (!gid) return;
+  const seq = ++liveInitSeq;
+  realtimeService.disconnect();
   alertsStore.setActiveGarden(gid);
   const detail = await gardensStore.fetchGardenDetail(gid).catch(() => null);
+  if (seq !== liveInitSeq) return;
   const zoneIds = (detail?.zones || []).map((z) => z.id);
   await Promise.all([
     tasksStore.fetchGardenTasks(gid, { is_completed: 'false' }).catch(() => {}),
     alertsStore.fetchGardenAlerts(gid).catch(() => {}),
     sensorsStore.reconcileZoneReadings(zoneIds).catch(() => {})
   ]);
+  if (seq !== liveInitSeq) return;
   realtimeService.connect(gid, {
     zoneIds,
     onAlertTriggered: (frameData) => {

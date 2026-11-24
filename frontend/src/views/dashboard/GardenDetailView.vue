@@ -659,6 +659,19 @@
                 </UCard>
               </div>
             </template>
+
+            <!-- TAB 6: 3D GARDEN TWIN (THREE.JS) -->
+            <template #twin3d>
+              <div class="pt-4">
+                <UCard>
+                  <GardenPlot3D
+                    :zones="gardensStore.zones"
+                    :latest-readings-by-zone="sensorsStore.latestByZone"
+                    :garden-name="garden.name"
+                  />
+                </UCard>
+              </div>
+            </template>
           </UTabs>
         </template>
       </div>
@@ -894,6 +907,7 @@ import { useSprint4Store } from '../../stores/sprint4.js';
 import { useComingSoon } from '../../composables/useComingSoon.js';
 import realtimeService from '../../services/realtime.js';
 import AlertBellButton from '../../components/AlertBellButton.vue';
+import GardenPlot3D from '../../components/three/GardenPlot3D.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -1086,6 +1100,13 @@ const tabItems = computed(() => [
     slot: 'activity',
     icon: 'i-lucide-notebook-pen',
     badge: sprint4Store.gardenJournalEntries.length > 0 ? String(sprint4Store.gardenJournalEntries.length) : undefined
+  },
+  {
+    label: '3D Twin',
+    value: 'twin3d',
+    slot: 'twin3d',
+    icon: 'i-lucide-box',
+    badge: { label: '3D', color: 'success', variant: 'soft' }
   }
 ]);
 

@@ -24,6 +24,12 @@ const CommunityCommentModel = require('./CommunityComment');
 const UserFollowModel = require('./UserFollow');
 const MediaAssetModel = require('./MediaAsset');
 const CommunityPostLikeModel = require('./CommunityPostLike');
+const NotificationPreferenceModel = require('./NotificationPreference');
+const NotificationModel = require('./Notification');
+const SustainabilityLogModel = require('./SustainabilityLog');
+const SeedPacketModel = require('./SeedPacket');
+const ApiKeyModel = require('./ApiKey');
+const PublicProfileModel = require('./PublicProfile');
 
 const User = UserModel(sequelize);
 const PasswordResetToken = PasswordResetTokenModel(sequelize);
@@ -49,6 +55,12 @@ const CommunityComment = CommunityCommentModel(sequelize);
 const UserFollow = UserFollowModel(sequelize);
 const MediaAsset = MediaAssetModel(sequelize);
 const CommunityPostLike = CommunityPostLikeModel(sequelize);
+const NotificationPreference = NotificationPreferenceModel(sequelize);
+const Notification = NotificationModel(sequelize);
+const SustainabilityLog = SustainabilityLogModel(sequelize);
+const SeedPacket = SeedPacketModel(sequelize);
+const ApiKey = ApiKeyModel(sequelize);
+const PublicProfile = PublicProfileModel(sequelize);
 
 // Sprint 1 Associations
 User.hasMany(PasswordResetToken, { foreignKey: 'user_id', as: 'resetTokens', onDelete: 'CASCADE' });
@@ -157,6 +169,33 @@ UserFollow.belongsTo(User, { foreignKey: 'followed_id', as: 'followed' });
 User.hasMany(MediaAsset, { foreignKey: 'uploaded_by', as: 'mediaAssets', onDelete: 'SET NULL' });
 MediaAsset.belongsTo(User, { foreignKey: 'uploaded_by', as: 'uploader' });
 
+// Sprint 5 Associations (F21-F24)
+User.hasOne(NotificationPreference, { foreignKey: 'user_id', as: 'notificationPreference', onDelete: 'CASCADE' });
+NotificationPreference.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications', onDelete: 'CASCADE' });
+Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+Garden.hasMany(Notification, { foreignKey: 'garden_id', as: 'notifications', onDelete: 'SET NULL' });
+Notification.belongsTo(Garden, { foreignKey: 'garden_id', as: 'garden' });
+
+Garden.hasMany(SustainabilityLog, { foreignKey: 'garden_id', as: 'sustainabilityLogs', onDelete: 'CASCADE' });
+SustainabilityLog.belongsTo(Garden, { foreignKey: 'garden_id', as: 'garden' });
+Zone.hasMany(SustainabilityLog, { foreignKey: 'zone_id', as: 'sustainabilityLogs', onDelete: 'SET NULL' });
+SustainabilityLog.belongsTo(Zone, { foreignKey: 'zone_id', as: 'zone' });
+
+User.hasMany(SeedPacket, { foreignKey: 'user_id', as: 'seedPackets', onDelete: 'CASCADE' });
+SeedPacket.belongsTo(User, { foreignKey: 'user_id', as: 'owner' });
+PlantCatalog.hasMany(SeedPacket, { foreignKey: 'plant_catalog_id', as: 'seedPackets', onDelete: 'SET NULL' });
+SeedPacket.belongsTo(PlantCatalog, { foreignKey: 'plant_catalog_id', as: 'catalogPlant' });
+
+User.hasMany(ApiKey, { foreignKey: 'user_id', as: 'apiKeys', onDelete: 'CASCADE' });
+ApiKey.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+User.hasOne(PublicProfile, { foreignKey: 'user_id', as: 'publicProfile', onDelete: 'CASCADE' });
+PublicProfile.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+Garden.hasMany(PublicProfile, { foreignKey: 'featured_garden_id', as: 'featuredProfiles', onDelete: 'SET NULL' });
+PublicProfile.belongsTo(Garden, { foreignKey: 'featured_garden_id', as: 'featuredGarden' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -183,5 +222,11 @@ module.exports = {
   CommunityComment,
   UserFollow,
   MediaAsset,
-  CommunityPostLike
+  CommunityPostLike,
+  NotificationPreference,
+  Notification,
+  SustainabilityLog,
+  SeedPacket,
+  ApiKey,
+  PublicProfile
 };

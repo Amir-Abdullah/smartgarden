@@ -1,6 +1,6 @@
 /**
  * SmartGarden Feature & Navigation Registry (F1-F24)
- * F1-F20 are live across Sprints 1-4; F21-F24 are scheduled for Sprint 5.
+ * All 24 features F1-F24 are live across Sprints 1-5.
  */
 
 export const FEATURES = [
@@ -347,14 +347,14 @@ export const FEATURES = [
     ]
   },
 
-  // Upcoming Features (F21 - F24, Sprint 5)
+  // Live Features (F21 - F24, Sprint 5)
   {
     id: 'F21',
     code: 'F21',
     slug: 'notifications',
     title: 'Multi-Channel Notifications',
     shortTitle: 'Notifications',
-    status: 'soon',
+    status: 'live',
     sprint: 5,
     section: 'account',
     icon: 'i-lucide-mail',
@@ -372,11 +372,11 @@ export const FEATURES = [
     slug: 'sustainability',
     title: 'Water & Sustainability Metrics',
     shortTitle: 'Sustainability',
-    status: 'soon',
+    status: 'live',
     sprint: 5,
     section: 'insights',
     icon: 'i-lucide-droplets',
-    to: '/dashboard/analytics?feature=F22',
+    to: '/dashboard/sustainability',
     summary: 'Measure rainwater catchment usage, drip irrigation savings, and compost carbon offsets.',
     highlights: [
       'Litres saved vs overhead watering baseline',
@@ -390,11 +390,11 @@ export const FEATURES = [
     slug: 'seed-inventory',
     title: 'Seed Vault & Germination Logs',
     shortTitle: 'Seed Vault',
-    status: 'soon',
+    status: 'live',
     sprint: 5,
     section: 'ops',
     icon: 'i-lucide-package',
-    to: '/dashboard/calendar?feature=F23',
+    to: '/dashboard/seed-vault',
     summary: 'Track seed packet expiry, germination rates, and heirloom provenance linked directly to catalog species.',
     highlights: [
       'Packet lot numbers & viability tracking',
@@ -408,7 +408,7 @@ export const FEATURES = [
     slug: 'api-developer',
     title: 'Public Profiles & Scoped API Keys',
     shortTitle: 'Public & API Keys',
-    status: 'soon',
+    status: 'live',
     sprint: 5,
     section: 'account',
     icon: 'i-lucide-key-round',
@@ -526,7 +526,8 @@ const SPRINT_LABELS = {
   1: 'Sprint 1 — Live Foundation',
   2: 'Sprint 2 — Live Operations & Telemetry',
   3: 'Sprint 3 — Live Horticultural Intelligence',
-  4: 'Sprint 4 — Live Media, Analytics, AI & Community'
+  4: 'Sprint 4 — Live Media, Analytics, AI & Community',
+  5: 'Sprint 5 — Live Notifications, Sustainability, Seed Vault, 3D & Developer Platform'
 };
 
 export function getFeaturesBySprint() {
@@ -562,7 +563,7 @@ export const PUBLIC_NAV_ITEMS = [
   { label: 'Plant Catalog', to: '/catalog', status: 'live' },
   { label: 'About', to: '/about', status: 'live' },
   { label: 'Contact', to: '/contact', status: 'live' },
-  { label: 'Pricing', key: 'pricing', status: 'soon' }
+  { label: 'Pricing', to: '/pricing', status: 'live' }
 ];
 
 export const DASHBOARD_NAV_SECTIONS = {
@@ -596,16 +597,16 @@ export const FOOTER_COLUMNS = [
       { label: 'Features', to: '/#features' },
       { label: 'Plant Catalog', to: '/catalog' },
       { label: 'Dashboard', to: '/dashboard' },
-      { label: 'Pricing', comingSoonKey: 'pricing', badge: 'Soon' }
+      { label: 'Pricing', to: '/pricing' }
     ]
   },
   {
     label: 'Resources',
     children: [
-      { label: 'Documentation', comingSoonKey: 'docs', badge: 'Soon' },
-      { label: 'Agronomy Blog', comingSoonKey: 'blog', badge: 'Soon' },
-      { label: 'Changelog', comingSoonKey: 'changelog', badge: 'Soon' },
-      { label: 'Help Center', comingSoonKey: 'help', badge: 'Soon' }
+      { label: 'Documentation', to: '/docs' },
+      { label: 'Agronomy Blog', to: '/blog' },
+      { label: 'Changelog', to: '/changelog' },
+      { label: 'Help Center', to: '/help' }
     ]
   },
   {
@@ -619,8 +620,8 @@ export const FOOTER_COLUMNS = [
   {
     label: 'Legal',
     children: [
-      { label: 'Privacy Policy', comingSoonKey: 'privacy', badge: 'Soon' },
-      { label: 'Terms of Service', comingSoonKey: 'terms', badge: 'Soon' }
+      { label: 'Privacy Policy', to: '/privacy' },
+      { label: 'Terms of Service', to: '/terms' }
     ]
   }
 ];

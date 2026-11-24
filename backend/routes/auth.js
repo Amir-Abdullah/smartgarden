@@ -291,6 +291,54 @@ async function authRoutes(fastify, options) {
     });
   });
 
+  // PUT /me — persist authenticated user profile updates
+  fastify.put('/me', { preHandler: verifyJwt }, async (request, reply) => {
+    const userId = request.user && request.user.id;
+    const user = userId ? await User.findByPk(userId) : null;
+    if (!user) {
+      return reply.code(401).send({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'User account not found.', statusCode: 401 }
+      });
+    }
+
+    const body = request.body && typeof request.body === 'object' ? request.body : {};
+    const updates = {};
+
+    if (body.name !== undefined) {
+      const cleanName = String(body.name || '').trim();
+      if (cleanName.length < 2 || cleanName.length > 100) {
+        return reply.code(400).send({
+          success: false,
+          error: { code: 'VALIDATION_ERROR', message: 'Full name must be between 2 and 100 characters.', statusCode: 400 }
+        });
+      }
+      updates.name = cleanName;
+    }
+
+    if (body.location_region !== undefined) {
+      const cleanRegion = String(body.location_region || '').trim();
+      if (cleanRegion.length > 100) {
+        return reply.code(400).send({
+          success: false,
+          error: { code: 'VALIDATION_ERROR', message: 'Location region must be 100 characters or fewer.', statusCode: 400 }
+        });
+      }
+      updates.location_region = cleanRegion || null;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await user.update(updates);
+    }
+
+    return reply.code(200).send({
+      success: true,
+      data: {
+        user: user.toJSON()
+      }
+    });
+  });
+
   // POST /forgot-password
   fastify.post('/forgot-password', async (request, reply) => {
     const { email } = request.body || {};

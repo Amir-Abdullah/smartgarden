@@ -7,6 +7,7 @@ const dbConfig = require('./config/database');
 const { connectDb } = dbConfig;
 const scheduler = require('./jobs/scheduler');
 const emailService = require('./services/emailService');
+const { createRateLimitHook } = require('./middleware/rateLimit');
 
 function getDatabase() {
   return typeof dbConfig.getDatabase === 'function' ? dbConfig.getDatabase() : dbConfig.sequelize;
@@ -34,6 +35,15 @@ function buildServer(opts = {}) {
 
   // Register WebSocket support
   app.register(websocket);
+
+  // Security Hardening Headers & IP Rate Limiter
+  app.addHook('onRequest', async (_request, reply) => {
+    reply.header('X-Content-Type-Options', 'nosniff');
+    reply.header('X-Frame-Options', 'DENY');
+    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+    reply.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+  });
+  app.addHook('onRequest', createRateLimitHook({ windowMs: 60000, max: 300 }));
 
   // Standard Error Response Handler conforming to RFC 7807 & PROJECT.md
   app.setErrorHandler((error, request, reply) => {
@@ -123,6 +133,10 @@ function buildServer(opts = {}) {
   const analyticsRoutes = require('./routes/analytics');
   const aiRoutes = require('./routes/ai');
   const communityRoutes = require('./routes/community');
+  const notificationRoutes = require('./routes/notifications');
+  const sustainabilityRoutes = require('./routes/sustainability');
+  const seedVaultRoutes = require('./routes/seedVault');
+  const developerRoutes = require('./routes/developer');
   const wsTransport = require('./realtime/wsTransport');
   const sseTransport = require('./realtime/sseTransport');
 
@@ -148,6 +162,10 @@ function buildServer(opts = {}) {
   app.register(analyticsRoutes, { prefix: '/api' });
   app.register(aiRoutes, { prefix: '/api' });
   app.register(communityRoutes, { prefix: '/api' });
+  app.register(notificationRoutes, { prefix: '/api' });
+  app.register(sustainabilityRoutes, { prefix: '/api' });
+  app.register(seedVaultRoutes, { prefix: '/api' });
+  app.register(developerRoutes, { prefix: '/api' });
   app.register(wsTransport, { prefix: '/api' });
   app.register(sseTransport, { prefix: '/api' });
 
@@ -173,6 +191,10 @@ function buildServer(opts = {}) {
   app.register(analyticsRoutes);
   app.register(aiRoutes);
   app.register(communityRoutes);
+  app.register(notificationRoutes);
+  app.register(sustainabilityRoutes);
+  app.register(seedVaultRoutes);
+  app.register(developerRoutes);
   app.register(wsTransport);
   app.register(sseTransport);
 

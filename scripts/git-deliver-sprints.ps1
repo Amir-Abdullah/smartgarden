@@ -19,7 +19,7 @@ $CommitMessages = @{
   sprint2 = 'feat(sprint2): implement F6-F10 operations, telemetry, realtime, alerts, automations & tracker'
   sprint3 = 'feat(sprint3): implement F11-F15 weather, calendar, care plans, recommendations & companions'
   sprint4 = 'feat(sprint4): implement F16-F20 journal, analytics, AI diagnosis/assistant & community'
-  sprint5 = 'feat(sprint5): implement F21-F24, public pages, ORM/security hardening & CI'
+  sprint5 = 'feat(sprint5): implement F21-F24, Three.js 3D visualizations, public pages, security hardening & CI'
 }
 
 $ExclusionRegex = '^(node_modules/|frontend/node_modules/|backend/node_modules/|dist/|frontend/dist/|build/|coverage/|\.sprint-checkpoints/)|(\.sqlite3?$|\.db(-journal|-wal|-shm)?$|\.log$|\.tmp$|^tmp_|^\.env($|\..*\.local$)|package-lock\.json$)'

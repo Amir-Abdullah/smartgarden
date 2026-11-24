@@ -119,12 +119,7 @@ const healthDb = ref('');
 let healthIntervalId = null;
 
 function mapNavItem(item) {
-  let target = item.to;
-  if (item.id === 'F23') {
-    target = '/dashboard/calendar?feature=F23';
-  } else if (item.id === 'F22') {
-    target = '/dashboard/analytics?feature=F22';
-  }
+  const target = item.to;
 
   let badge;
   if (item.status === 'soon') {
@@ -181,13 +176,7 @@ const footerNavItems = computed(() => [
     {
       label: 'Help & Guides',
       icon: 'i-lucide-life-buoy',
-      to: '/dashboard/help',
-      badge: {
-        label: 'Soon',
-        color: 'primary',
-        variant: 'subtle',
-        size: 'xs'
-      }
+      to: '/dashboard/help'
     }
   ]
 ]);

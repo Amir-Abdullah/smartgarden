@@ -2,13 +2,7 @@ import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createSuiteSession, assertCleanRuntime, loginAsDemo } from '../helpers/e2e-context.js';
 
-const COMING_SOON_ROUTES = [
-  { path: '/dashboard/analytics?feature=F22', title: 'Water & Sustainability Metrics', code: 'F22', sprint: 'Coming in Sprint 5' },
-  { path: '/dashboard/calendar?feature=F23', title: 'Seed Vault & Germination Logs', code: 'F23', sprint: 'Coming in Sprint 5' },
-  { path: '/dashboard/help', title: 'Help Center', code: null, sprint: 'Coming in Sprint 2' }
-];
-
-describe('E2E: F22-F23 Coming Soon Routes, Legacy Redirects & 404 Edge Routes', () => {
+describe('E2E: Live Help Route, Legacy Redirects & 404 Edge Routes', () => {
   let session;
   let page;
 
@@ -23,20 +17,19 @@ describe('E2E: F22-F23 Coming Soon Routes, Legacy Redirects & 404 Edge Routes', 
     if (session) await session.teardown();
   });
 
-  it('All F16-F23 and Help dashboard Coming Soon routes render polished "Under Development" views', async () => {
+  it('Live Help Center (/dashboard/help) and Sprint 5 routes (/dashboard/sustainability, /dashboard/seed-vault) render cleanly', async () => {
     page.clearDiagnostics();
 
-    for (const item of COMING_SOON_ROUTES) {
-      await page.goto(`${session.baseUrl}${item.path}`);
-      await page.waitForText(item.title);
-      await page.waitForText('Under Development');
-      await page.waitForText(item.sprint);
-      const body = await page.getBodyText();
-      if (item.code) {
-        assert.ok(body.includes(item.code), `Route ${item.path} missing badge ${item.code}`);
-      }
-      assert.ok(body.includes('Back to Overview'), `Route ${item.path} missing Back to Overview button`);
-    }
+    await page.goto(`${session.baseUrl}/dashboard/help`);
+    await page.waitForText('Help Center');
+    await page.waitForText('Knowledge Base');
+    await page.waitForText('ZONE_OVERCROWDED');
+
+    await page.goto(`${session.baseUrl}/dashboard/analytics?feature=F22`);
+    await page.waitForText('Water & Sustainability Metrics');
+
+    await page.goto(`${session.baseUrl}/dashboard/calendar?feature=F23`);
+    await page.waitForText('Seed Vault & Germination Logs');
 
     assertCleanRuntime(page);
   });

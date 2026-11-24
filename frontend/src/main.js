@@ -13,3 +13,9 @@ app.use(router);
 app.use(ui);
 
 app.mount('#app');
+
+if (import.meta.env.PROD && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}

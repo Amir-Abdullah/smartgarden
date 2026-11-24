@@ -16,19 +16,23 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     if (session) await session.teardown();
   });
 
-  it('Landing page (/) renders hero, stats, F1-F24 cards, 3-step guide, 6-plant preview, testimonials, FAQ, CTA, and dark mode toggle', async () => {
+  it('Landing page (/) renders hero 3D diorama, stats, F1-F24 cards, 3-step guide, 6-plant preview, testimonials, FAQ, CTA, and dark mode toggle', async () => {
     page.clearDiagnostics();
     await page.goto(`${session.baseUrl}/`);
     await page.waitForText('Grow Smarter. Cultivate Resilient Gardens.');
+    await page.waitFor(() => {
+      const c = document.querySelector('[data-testid="hero-3d-canvas"]');
+      return Boolean(c && c.getBoundingClientRect().width > 100 && c.getBoundingClientRect().height > 100);
+    });
 
     const body = await page.getBodyText();
 
     // Stat strip
-    for (const stat of ['32+', '20 Live', '3 Tiers', '4 Soon']) {
+    for (const stat of ['32+', '24 Live', '3D Twin', '3 Tiers']) {
       assert.ok(body.includes(stat), `Landing page missing stat "${stat}"`);
     }
 
-    // F1-F24 feature cards
+    // F1-F24 feature cards all live
     assert.ok(body.includes('Accounts & Security'), 'Missing F1 feature card');
     assert.ok(body.includes('Zone Crop Inventory'), 'Missing F5 feature card');
     assert.ok(body.includes('Recurring Care Tasks & Watering'), 'Missing F6 feature card');
@@ -37,29 +41,11 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     assert.ok(body.includes('Companion Planting Advisor'), 'Missing F15 feature card');
     assert.ok(body.includes('Growth Journal & Photo Timeline'), 'Missing F16 feature card');
     assert.ok(body.includes('Community Hub & Social Feed'), 'Missing F20 feature card');
+    assert.ok(body.includes('Multi-Channel Notifications'), 'Missing F21 feature card');
     assert.ok(body.includes('Public Profiles & Scoped API Keys'), 'Missing F24 feature card');
 
-    // Filter tabs: Live Now (F1-F20) vs Upcoming (F21-F24)
-    await page.clickButton('Live Now (F1–F20)');
-    await page.waitForTextGone('Public Profiles & Scoped API Keys');
-    assert.ok((await page.getBodyText()).includes('Accounts & Security'));
-    assert.ok((await page.getBodyText()).includes('Growth Journal & Photo Timeline'));
-
-    await page.clickButton('Upcoming (F21–F24)');
-    await page.waitForText('Multi-Channel Notifications');
-    assert.ok(!(await page.getBodyText()).includes('Accounts & Security'));
-
-    // Click an upcoming feature card -> opens ComingSoonModal
-    await page.eval(() => {
-      const cards = Array.from(document.querySelectorAll('#features div, #features a'));
-      const f21 = cards.find((el) => (el.innerText || '').includes('Multi-Channel Notifications') && el.className.includes('cursor-pointer'));
-      if (f21) f21.click();
-    });
-    await page.waitForText('Planned Capabilities');
-    await page.waitForText('Coming in Sprint 5');
-    await page.clickButton('Close', { within: '[role="dialog"]' });
-    await page.waitForTextGone('Planned Capabilities');
-
+    await page.clickButton('Live Now (F1–F24)');
+    await page.waitForText('Public Profiles & Scoped API Keys');
     await page.clickButton('All (24)');
     await page.waitForText('Accounts & Security');
 
@@ -144,22 +130,9 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     assert.ok(body.includes('Sprint 2 — Live Operations & Telemetry'));
     assert.ok(body.includes('Sprint 3 — Live Horticultural Intelligence'));
     assert.ok(body.includes('Sprint 4 — Live Media, Analytics, AI & Community'));
-    assert.ok(body.includes('Sprint 5 — Planned'));
+    assert.ok(body.includes('Sprint 5 — Live Notifications, Sustainability, Seed Vault, 3D & Developer Platform'));
     assert.ok(body.includes('Accounts & Security'));
     assert.ok(body.includes('Public Profiles & Scoped API Keys'));
-
-    // Clicking a planned feature card opens ComingSoonModal
-    await page.clickElementFromFn(
-      () => {
-        const cards = Array.from(document.querySelectorAll('#roadmap div'));
-        return cards.find((el) => (el.innerText || '').includes('Multi-Channel Notifications') && el.className.includes('cursor-pointer')) || null;
-      },
-      'Roadmap F21 card not found'
-    );
-    await page.waitForText('Planned Capabilities');
-    await page.sleep(250);
-    await page.clickButton('Close', { within: '[role="dialog"]' });
-    await page.waitForTextGone('Planned Capabilities');
 
     assertCleanRuntime(page);
   });
@@ -195,28 +168,23 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     assertCleanRuntime(page);
   });
 
-  it('Pricing (/pricing) and Coming Soon header/footer actions render polished views/modals', async () => {
+  it('Live Pricing (/pricing), Docs, Privacy & Public Navigation render full content cleanly', async () => {
     page.clearDiagnostics();
     await page.goto(`${session.baseUrl}/pricing`);
     await page.waitForText('Pricing & Plans');
-    await page.waitForText('Under Development');
-    await page.waitForText('Coming in Sprint 3');
-    await page.clickButton('Notify Me');
-    await page.waitForText('Interest noted!');
+    await page.waitForText('Hobby Free');
+    await page.waitForText('Family & Co-op');
+    await page.waitForText('Pro Agronomy');
 
-    // Header Pricing [Soon] and Footer Privacy Policy [Soon] open ComingSoonModal
     await page.goto(`${session.baseUrl}/`);
     await page.waitForText('Grow Smarter. Cultivate Resilient Gardens.');
-    await page.clickButton('Pricing', { within: 'header' });
-    await page.waitForText('Pricing & Plans');
-    await page.waitForText('Planned Capabilities');
-    await page.clickButton('Close', { within: '[role="dialog"]' });
-    await page.waitForTextGone('Planned Capabilities');
+    await page.clickSelector('header a[href="/pricing"]');
+    await page.waitForUrl('/pricing');
+    await page.waitForText('Transparent Plans');
 
-    await page.clickButton('Privacy Policy');
-    await page.waitForText('Zero third-party telemetry resale');
-    await page.clickButton('Close');
-    await page.waitForTextGone('Zero third-party telemetry resale');
+    await page.clickSelector('footer a[href="/privacy"]');
+    await page.waitForUrl('/privacy');
+    await page.waitForText('Zero Third-Party Telemetry Resale');
 
     assertCleanRuntime(page);
   });

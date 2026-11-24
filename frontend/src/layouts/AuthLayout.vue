@@ -2,6 +2,7 @@
   <div class="grid min-h-screen grid-cols-1 bg-zinc-50 dark:bg-zinc-950 lg:grid-cols-2">
     <!-- Left Brand Panel (hidden on mobile) -->
     <aside class="brand-gradient relative hidden flex-col justify-between overflow-hidden p-12 text-white lg:flex">
+      <AmbientBotanicalBg3D />
       <div class="pointer-events-none absolute -top-24 -right-24 size-96 rounded-full bg-emerald-400/15 blur-3xl" />
       <div class="pointer-events-none absolute -bottom-24 -left-24 size-96 rounded-full bg-teal-300/15 blur-3xl" />
 
@@ -93,4 +94,5 @@
 
 <script setup>
 import AppLogo from '../components/AppLogo.vue';
+import AmbientBotanicalBg3D from '../components/three/AmbientBotanicalBg3D.vue';
 </script>

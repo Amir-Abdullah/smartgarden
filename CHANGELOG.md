@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- **Sprint 5 (`sprint5`):** Multi-Channel Notifications (`F21`), Water & Sustainability Metrics (`F22`), Seed Vault (`F23`), Public Profiles & Scoped API Keys (`F24`), all 7 public pages + `/dashboard/help`, ORM upgrade, security headers/rate limiting, PWA, CI, MQTT, i18n, and ESP32 reference firmware.
+- Manual human testing pass across `sprint2` -> `sprint3` -> `sprint4` -> `sprint5`, external credential onboarding (Cloudflare R2, Gemini API, SMTP), and production hosting selection prior to merging tested branches into `main`.
+
+## [5.0.0] - 2026-11-25 (`sprint5`)
+
+### Added
+- **Schema & Models:** Additive migration `024_sprint5_notifications_sustainability_seeds_keys.js` (`notification_preferences`, `notifications`, `sustainability_logs`, `seed_packets`, `api_keys`, `public_profiles`) and 6 models wired in `backend/models/index.js`.
+- **F21 Multi-Channel Notifications & Profile Preferences:** `notificationService.js` (strict HTTPS-only SSRF validation blocking private/loopback/link-local targets with `SSRF_BLOCKED_URL`, HMAC-SHA256 `X-SmartGarden-Signature` test webhook, inbox CRUD), `routes/notifications.js`, `PUT /api/auth/me` profile update in `routes/auth.js`, and upgraded `SettingsView.vue`.
+- **F22 Water & Sustainability Metrics:** `sustainabilityService.js` (drip savings vs overhead baseline, rainwater/compost/mulch/solar conservation scoring & `A+`..`D` grades), `routes/sustainability.js`, and `SustainabilityView.vue`.
+- **F23 Seed Vault & Germination Logs:** `seedVaultService.js` (`FRESH`/`EXPIRING_SOON`/`EXPIRED`/`LOW_STOCK` viability status and 1-click `POST /api/seeds/:id/allocate` crop planting), `routes/seedVault.js`, and `SeedVaultView.vue`.
+- **F24 Public Profiles & Scoped API Keys (`sg_pat_`):** `developerService.js` (once-shown `sg_pat_` token issuance, SHA-256 verification, revoke, opt-in `GET /api/public/growers/:handle`), `routes/developer.js`, `sg_pat_` token auth in `middleware/auth.js`, and `PublicProfileView.vue` (`/u/:handle`).
+- **Three.js 3D Garden Visualizations (`frontend/src/components/three/`):** `HeroGardenScene3D.vue` (interactive Landing raised-bed diorama with lighting presets & drag-to-orbit), `GardenPlot3D.vue` (data-driven 3D Digital Twin with moisture rings, sun-hour slider & click raycasting in `GardenDetailView.vue`, `OverviewView.vue`, `PublicProfileView.vue`), `AmbientBotanicalBg3D.vue` (`AuthLayout.vue`, `PricingView.vue`), and `three` manual chunk splitting in `frontend/vite.config.js`.
+- **All 7 Public Content Pages & Help (`PUB-7`):** `PricingView.vue`, `DocsView.vue`, `BlogView.vue`, `ChangelogView.vue`, `HelpCenterView.vue` (`/help` & `/dashboard/help`), `PrivacyView.vue`, and `TermsView.vue`.
+- **Hardening, PWA, CI & IoT/i18n Extras:** `backend/middleware/rateLimit.js`, security headers in `backend/server.js`, `frontend/public/{manifest.webmanifest,sw.js}`, `frontend/src/composables/useI18n.js` (`en`/`es`), `backend/services/mqttBridge.js`, `firmware/esp32_smartgarden_node/esp32_smartgarden_node.ino`, `.github/workflows/ci.yml`, `backend/tests/sprint5_f21_f24.test.js` (`5` tests, `127/127` backend passing), and `frontend/tests/e2e/sprint5-f21-f24-3d.test.js` (`5` tests, `38/38` Chrome CDP E2E passing).
+
+### Changed
+- Installed `three` inside `frontend/` (`package.json` only, keeping root/backend pure-JS `backend/vendor/` parity at `14/14` matched).
+- Updated `frontend/src/config/features.js` (`F1`–`F24` all live -> `24 Live / 0 Soon`), `frontend/src/router/index.js`, `frontend/src/layouts/{PublicLayout,DashboardLayout,AuthLayout}.vue`, `AnalyticsView.vue` (`?feature=F22` -> Sustainability), `CalendarView.vue` (`?feature=F23` -> Seed Vault), and `backend/scripts/seed-demo.js` (idempotent `ensureSprint5DemoData`).
+
+### Security
+- Enforced security response headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`) and configurable IP rate limiting (`backend/middleware/rateLimit.js`).
+- Enforced HTTPS-only SSRF protection on notification webhook URLs (`SSRF_BLOCKED_URL` for `localhost`, loopback, RFC 1918, and link-local hosts) and timing-safe SHA-256 verification for `sg_pat_` personal access tokens.
 
 ## [4.0.0] - 2026-11-25 (`sprint4`)
 

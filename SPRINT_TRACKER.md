@@ -4,10 +4,10 @@
 
 ## 1. Resume Header & Active Checkpoint
 
-- **Active Sprint:** Sprint 4 (`sprint4` branch) — Media, Analytics, AI & Community (`F16`–`F20`)
-- **Base Branch / Commit:** `main` (`7653b4fd`) -> `sprint2` (`f983e0e`) -> `sprint3` (`36a3f44`) -> `sprint4`
-- **Status:** `VERIFIED_READY_FOR_PUSH` (Backend `122/122` across `30` suites, Chrome CDP E2E `33/33` across `7` suites, Vite build `1000` modules, migration/seed idempotency `23` migrations / `0` Run 2 mutations, and vendor parity `14/14` matched all passed in `BypassSandbox: false`)
-- **Next Action on Resume:** Start **Sprint 5 (`sprint5` from `sprint4`)** — `F21`–`F24`, all 7 public Coming Soon pages + `/dashboard/help`, ORM upgrade, security hardening, PWA, CI, and MQTT/i18n/ESP32 deliverables.
+- **Active Sprint:** Sprint 5 (`sprint5` branch) — Notifications, Sustainability, Seed Vault, Developer API, Three.js 3D Visualizations, Public Pages & Hardening (`F21`–`F24`, `PUB-7`, `3D`)
+- **Base Branch / Commit:** `main` (`7653b4fd`) -> `sprint2` (`f983e0e`) -> `sprint3` (`36a3f44`) -> `sprint4` (`b1b7abd`) -> `sprint5`
+- **Status:** `VERIFIED_READY_FOR_PUSH` (Backend `127/127` across `31` suites, Chrome CDP E2E `38/38` across `8` suites, Vite build `1018` modules with split `three` chunk, migration/seed idempotency `24` migrations / `31` tables / `0` Run 2 mutations, and vendor parity `14/14` matched all passed in `BypassSandbox: false`)
+- **Next Action on Resume:** Push `sprint5` to `origin/sprint5` (never merging into `main`), then begin manual human testing sequentially from `sprint2` -> `sprint3` -> `sprint4` -> `sprint5` and wire production credentials (Cloudflare R2, Gemini API key, SMTP, hosting) before merging tested branches into `main`.
 
 ---
 
@@ -21,8 +21,8 @@
 | `sprint1` | `main` | `7653b4fd55c2fde36182d17daa9c9f0d629f07d3` | Pushed (`origin/sprint1`) | No | Sprint 1 archive branch |
 | `sprint2` | `main` | `23f77c6` + `f983e0e` | Pushed (`origin/sprint2`) | **No** | Pre-Sprint-2 docs (`Document/*.md` + `vercel.json`), F6–F10, `S2-X`, `R6` |
 | `sprint3` | `sprint2` | `36a3f44` | Pushed (`origin/sprint3`) | **No** | F11–F15 Horticultural Intelligence (`117/117` backend, `28/28` E2E) |
-| `sprint4` | `sprint3` | Prepared via `scripts/git-deliver-sprints.ps1 -Sprint sprint4` | Ready to push (`origin/sprint4`) | **No** | F16–F20 Media, Analytics, AI & Community (`122/122` backend, `33/33` E2E) |
-| `sprint5` | `sprint4` | `pending` | Pending | **No** | F21–F24, `PUB-7` public pages & hardening |
+| `sprint4` | `sprint3` | `b1b7abd` | Pushed (`origin/sprint4`) | **No** | F16–F20 Media, Analytics, AI & Community (`122/122` backend, `33/33` E2E) |
+| `sprint5` | `sprint4` | Prepared via `scripts/git-deliver-sprints.ps1 -Sprint sprint5` | Ready to push (`origin/sprint5`) | **No** | F21–F24, Three.js 3D visualizations, `PUB-7` public pages & hardening (`127/127` backend, `38/38` E2E) |
 
 ---
 
@@ -105,18 +105,47 @@
   - Registered Sprint 4 routes in `backend/server.js`, added `ensureSprint4DemoData` (`Maya Lin`, 3 tomato journal entries, 5d aggregates, 3 community posts, 2 threaded comments) to `backend/scripts/seed-demo.js`.
   - Updated `frontend/src/services/api.js` (FormData boundary preservation), `frontend/src/config/features.js` (`20 Live / 4 Soon`), `frontend/src/stores/{sprint4,index}.js`, `frontend/src/router/index.js`, `LandingView.vue`, and `OverviewView.vue`.
 
+### Sprint 5 — Notifications, Sustainability, Seed Vault, Developer API, Three.js 3D, Public Pages & Hardening (`F21`–`F24`, `PUB-7`, `3D`)
+- [x] **S5-INFRA Migration & Models:**
+  - Additive migration `backend/migrations/024_sprint5_notifications_sustainability_seeds_keys.js` (`notification_preferences`, `notifications`, `sustainability_logs`, `seed_packets`, `api_keys`, `public_profiles`).
+  - 6 Sequelize models (`NotificationPreference`, `Notification`, `SustainabilityLog`, `SeedPacket`, `ApiKey`, `PublicProfile`) registered and associated in `backend/models/index.js`.
+- [x] **F21 — Multi-Channel Notifications & Profile Preferences:**
+  - Backend: `backend/services/notificationService.js` (strict HTTPS-only SSRF guard blocking `localhost`, `127.*`, `10.*`, `169.254.*`, `192.168.*`, `172.16-31.*`, `::1`, `fe80:` with `400 SSRF_BLOCKED_URL`; HMAC-SHA256 `X-SmartGarden-Signature` test webhook; inbox CRUD & mark-read), `backend/routes/notifications.js`, plus `PUT /api/auth/me` profile update in `backend/routes/auth.js`.
+  - Frontend: Upgraded `frontend/src/views/dashboard/SettingsView.vue` (real `PUT /api/auth/me` profile save, language toggle, unified notification inbox, SSRF-checked webhook settings & tester).
+- [x] **F22 — Water & Sustainability Metrics:**
+  - Backend: `backend/services/sustainabilityService.js` (drip vs overhead savings, rainwater/compost/mulch/solar water & CO₂ impact, 0–100 score & `A+`..`D` grade), `backend/routes/sustainability.js`.
+  - Frontend: `frontend/src/views/dashboard/SustainabilityView.vue` (`/dashboard/sustainability`) and `AnalyticsView.vue` `?feature=F22` handoff to live Sustainability metrics.
+- [x] **F23 — Seed Vault & Germination Logs:**
+  - Backend: `backend/services/seedVaultService.js` (seed packet CRUD, `FRESH`/`EXPIRING_SOON`/`EXPIRED`/`LOW_STOCK` viability status, 1-click `POST /api/seeds/:id/allocate` decrementing `seeds_remaining` & creating `ZonePlant` with zone RBAC), `backend/routes/seedVault.js`.
+  - Frontend: `frontend/src/views/dashboard/SeedVaultView.vue` (`/dashboard/seed-vault`) and `CalendarView.vue` `?feature=F23` handoff to Seed Vault.
+- [x] **F24 — Developer API Keys (`sg_pat_`) & Public Showcase:**
+  - Backend: `backend/services/developerService.js` (once-shown `sg_pat_` token issuance, timing-safe SHA-256 hash verification, key revocation, opt-in `GET /api/public/growers/:handle` excluding private PII), `backend/routes/developer.js`, `sg_pat_` authentication inside `backend/middleware/auth.js` (`verifyJwt`).
+  - Frontend: `SettingsView.vue` Showcase & API Key manager + `frontend/src/views/public/PublicProfileView.vue` (`/u/:handle`).
+- [x] **Three.js Interactive 3D Experiences (`frontend/src/components/three/`):**
+  - `HeroGardenScene3D.vue`: Landing hero interactive cedar raised-bed diorama with tomato vines, basil, marigolds, pulsing IoT sensor probe, floating pollen motes, drag-to-orbit, Day / Golden Hour / Night Glow lighting switcher, Auto-Spin toggle, safe WebGL `try/catch` + 2D fallback, and full geometry/material disposal (`LandingView.vue`).
+  - `GardenPlot3D.vue`: Data-driven 3D Digital Twin mapping garden zones by `zone_type`/`soil_type`/area and live moisture halo rings with drag-to-orbit, zoom, Sun Hour slider (`6:00`–`22:00`), click raycasting, and HUD overlay (`GardenDetailView.vue` `3D Twin` tab, `OverviewView.vue` preview card, `PublicProfileView.vue`).
+  - `AmbientBotanicalBg3D.vue`: Subtle floating particle backdrop in `AuthLayout.vue` and `PricingView.vue`.
+  - `frontend/vite.config.js`: Split `three` into an isolated `manualChunks` bundle (`531.60 kB` / `132.31 kB` gzip).
+- [x] **All 7 Public Content Pages + `/dashboard/help` (`PUB-7`, `24 Live / 0 Soon`):**
+  - Live views: `PricingView.vue` (`/pricing`), `DocsView.vue` (`/docs`), `BlogView.vue` (`/blog`), `ChangelogView.vue` (`/changelog`), `HelpCenterView.vue` (`/help` & `/dashboard/help`), `PrivacyView.vue` (`/privacy`), `TermsView.vue` (`/terms`), wired across `features.js`, `router/index.js`, `PublicLayout.vue`, and `DashboardLayout.vue`.
+- [x] **Hardening, PWA, CI & IoT/i18n Extras:**
+  - Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) + per-IP rate limiter (`backend/middleware/rateLimit.js`) in `backend/server.js`.
+  - PWA shell (`frontend/public/manifest.webmanifest`, `frontend/public/sw.js`), wired in `frontend/index.html` and `frontend/src/main.js` (production SW registration).
+  - `frontend/src/composables/useI18n.js` (`en`/`es`), `backend/services/mqttBridge.js` (delegating to `ingestService.processTelemetry`), `firmware/esp32_smartgarden_node/esp32_smartgarden_node.ino`, `.github/workflows/ci.yml`, and idempotent `ensureSprint5DemoData` in `backend/scripts/seed-demo.js`.
+  - Tests: `backend/tests/sprint5_f21_f24.test.js` (`5` tests) and `frontend/tests/e2e/sprint5-f21-f24-3d.test.js` (`5` tests).
+
 ---
 
 ## 4. Verification Outcomes Log
 
 | Component / Gate | Command | Result | Notes |
 |---|---|---|---|
-| Sprint 4 Backend Suite | `npm test` | **PASS** (`122/122` across `30` suites) | Includes `backend/tests/sprint4_f16_f20.test.js` (`5` comprehensive tests on SQLite `:memory:`) |
+| Sprint 5 Backend Suite | `npm test` | **PASS** (`127/127` across `31` suites) | Includes `backend/tests/sprint5_f21_f24.test.js` (`5` tests on SQLite `:memory:`) |
 | M1-C In-Process Full-Stack Integration | `node --test --test-reporter=spec frontend/tests/integration/f6-f10-fullstack.test.mjs` | **PASS** (`5/5` journeys) | Real Pinia + Vue Router + `app.inject` / `app.injectWs` |
-| Sprint 4 Frontend Build | `npm --prefix frontend run build` | **PASS** (`0` errors, `1000` modules) | Vite production bundle |
-| Sprint 4 Migrate & Seed Idempotency | `migrate.js` x2 & `seed-demo.js` x2 on fresh temp SQLite | **PASS** (`23` migrations, `0` Run 2 mutations) | Verified `media_assets` & `community_post_likes` + `sprint4` seeds |
-| Sprint 4 Chrome CDP E2E Suite | `$env:DB_DIALECT='sqlite'; $env:DB_STORAGE=':memory:'; npm --prefix frontend run test:e2e` | **PASS** (`33/33` across `7` suites) | Includes new `sprint4-f16-f20.test.js` (`5` tests) |
-| Vendor Parity | SHA-256 check `backend/vendor/` vs `node_modules/` | **PASS** (`14/14` matched) | Pure-JS modules incl. updated `fastify/index.js` |
+| Sprint 5 Frontend Build | `npm --prefix frontend run build` | **PASS** (`0` errors, `1018` modules) | Split `three` chunk (`531.60 kB` / `132.31 kB` gzip) |
+| Sprint 5 Migrate & Seed Idempotency | `migrate.js` x2 & `seed-demo.js` x2 on fresh temp SQLite | **PASS** (`24` migrations, `31` tables, `0` Run 2 mutations) | Verified Sprint 1–5 schemas & demo seeds idempotent |
+| Sprint 5 Chrome CDP E2E Suite | `$env:DB_DIALECT='sqlite'; $env:DB_STORAGE=':memory:'; npm --prefix frontend run test:e2e` | **PASS** (`38/38` across `8` suites) | Includes `sprint5-f21-f24-3d.test.js` (`5` tests incl. Three.js WebGL canvases) |
+| Vendor Parity | SHA-256 check `backend/vendor/` vs `node_modules/` | **PASS** (`14/14` matched) | Pure-JS modules untouched; `three` installed only in `frontend/` |
 
 ---
 
@@ -139,9 +168,10 @@
 
 ---
 
-## 6. Remaining Work (Sprint 5)
+## 6. Post-Implementation Manual Testing & Production Onboarding Checklist
 
-- **Sprint 5 (`sprint5` from `sprint4`) — F21–F24, Public Pages & Hardening:**
-  - `F21` Multi-Channel Notifications, `F22` Water & Sustainability Metrics, `F23` Seed Vault & Germination Logs, `F24` Public Profiles & Scoped API Keys (`sg_pat_`).
-  - `PUB-7`: Replace all 7 `PUBLIC_COMING_SOON_PAGES` + `/dashboard/help` `ComingSoonView` placeholders with real views.
-  - `S5-ORM`, `S5-SEC` (`@fastify/helmet`, `@fastify/rate-limit`, security matrix audit), `S5-PWA`, `S5-QA` (CI workflow, DB index audit, expanded E2E), `S5-EXT` (MQTT bridge, Vue i18n, ESP32-S3 firmware sketch).
+- [ ] Manual human testing pass sequentially across `sprint2` (`F6`–`F10`) -> `sprint3` (`F11`–`F15`) -> `sprint4` (`F16`–`F20`) -> `sprint5` (`F21`–`F24`, Three.js 3D scenes, public pages) before merging branches into `main`.
+- [ ] Configure Cloudflare R2 credentials (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, optional `R2_PUBLIC_URL`) for Sprint 4+ photo storage.
+- [ ] Configure Gemini API key (`GEMINI_API_KEY`) for Sprint 4 live AI Diagnosis (`F18`) & Assistant (`F19`).
+- [ ] Configure SMTP credentials (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`) for Sprint 2/5 alert & notification emails.
+- [ ] Finalize always-on backend hosting alternative to Render free tier and verify production MySQL/PostgreSQL environment before merging tested sprint branches into `main`.

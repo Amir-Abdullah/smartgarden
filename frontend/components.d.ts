@@ -12,8 +12,11 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AlertBellButton: typeof import('./src/components/AlertBellButton.vue')['default']
+    AmbientBotanicalBg3D: typeof import('./src/components/three/AmbientBotanicalBg3D.vue')['default']
     AppLogo: typeof import('./src/components/AppLogo.vue')['default']
     ComingSoonModal: typeof import('./src/components/ComingSoonModal.vue')['default']
+    GardenPlot3D: typeof import('./src/components/three/GardenPlot3D.vue')['default']
+    HeroGardenScene3D: typeof import('./src/components/three/HeroGardenScene3D.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TelemetryChart: typeof import('./src/components/charts/TelemetryChart.vue')['default']

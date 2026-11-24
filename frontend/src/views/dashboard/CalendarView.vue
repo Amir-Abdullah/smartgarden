@@ -1,5 +1,5 @@
 <template>
-  <ComingSoonView v-if="isSeedVaultAlias" />
+  <SeedVaultView v-if="isSeedVaultAlias" />
   <UDashboardPanel v-else id="planting-calendar-view">
     <template #header>
       <UDashboardNavbar title="Seasonal Planting Calendar">
@@ -197,7 +197,7 @@ import { useToast } from '@nuxt/ui/composables';
 import { useGardensStore } from '../../stores/gardens.js';
 import { useHorticultureStore } from '../../stores/horticulture.js';
 import AlertBellButton from '../../components/AlertBellButton.vue';
-import ComingSoonView from '../ComingSoonView.vue';
+import SeedVaultView from './SeedVaultView.vue';
 
 const route = useRoute();
 const toast = useToast();

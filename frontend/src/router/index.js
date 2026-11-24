@@ -8,6 +8,14 @@ import LandingView from '../views/public/LandingView.vue';
 import AboutView from '../views/public/AboutView.vue';
 import ContactView from '../views/public/ContactView.vue';
 import InviteAcceptView from '../views/public/InviteAcceptView.vue';
+import PublicProfileView from '../views/public/PublicProfileView.vue';
+import PricingView from '../views/public/PricingView.vue';
+import DocsView from '../views/public/DocsView.vue';
+import BlogView from '../views/public/BlogView.vue';
+import ChangelogView from '../views/public/ChangelogView.vue';
+import HelpCenterView from '../views/public/HelpCenterView.vue';
+import PrivacyView from '../views/public/PrivacyView.vue';
+import TermsView from '../views/public/TermsView.vue';
 import PlantCatalogView from '../views/shared/PlantCatalogView.vue';
 
 import LoginView from '../views/auth/LoginView.vue';
@@ -34,6 +42,8 @@ import AnalyticsView from '../views/dashboard/AnalyticsView.vue';
 import AiDiagnosisView from '../views/dashboard/AiDiagnosisView.vue';
 import AiAssistantView from '../views/dashboard/AiAssistantView.vue';
 import CommunityView from '../views/dashboard/CommunityView.vue';
+import SustainabilityView from '../views/dashboard/SustainabilityView.vue';
+import SeedVaultView from '../views/dashboard/SeedVaultView.vue';
 import SettingsView from '../views/dashboard/SettingsView.vue';
 
 import ComingSoonView from '../views/ComingSoonView.vue';
@@ -78,44 +88,50 @@ const routes = [
       {
         path: 'pricing',
         name: 'Pricing',
-        component: ComingSoonView,
-        meta: { feature: 'pricing', title: 'Pricing & Plans' }
+        component: PricingView,
+        meta: { title: 'Pricing & Plans' }
       },
       {
         path: 'docs',
         name: 'Docs',
-        component: ComingSoonView,
-        meta: { feature: 'docs', title: 'Documentation & Guides' }
+        component: DocsView,
+        meta: { title: 'Documentation & Guides' }
       },
       {
         path: 'blog',
         name: 'Blog',
-        component: ComingSoonView,
-        meta: { feature: 'blog', title: 'Agronomy Blog' }
+        component: BlogView,
+        meta: { title: 'Agronomy Blog' }
       },
       {
         path: 'changelog',
         name: 'Changelog',
-        component: ComingSoonView,
-        meta: { feature: 'changelog', title: 'Release Changelog' }
+        component: ChangelogView,
+        meta: { title: 'Release Changelog' }
       },
       {
         path: 'help',
         name: 'Help',
-        component: ComingSoonView,
-        meta: { feature: 'help', title: 'Help Center' }
+        component: HelpCenterView,
+        meta: { title: 'Help Center' }
       },
       {
         path: 'privacy',
         name: 'Privacy',
-        component: ComingSoonView,
-        meta: { feature: 'privacy', title: 'Privacy Policy' }
+        component: PrivacyView,
+        meta: { title: 'Privacy Policy' }
       },
       {
         path: 'terms',
         name: 'Terms',
-        component: ComingSoonView,
-        meta: { feature: 'terms', title: 'Terms of Service' }
+        component: TermsView,
+        meta: { title: 'Terms of Service' }
+      },
+      {
+        path: 'u/:handle',
+        name: 'PublicProfile',
+        component: PublicProfileView,
+        meta: { feature: 'F24', title: 'Grower Showcase' }
       }
     ]
   },
@@ -285,10 +301,22 @@ const routes = [
         meta: { requiresAuth: true, feature: 'F20', title: 'Community Hub & Social Feed' }
       },
       {
+        path: 'sustainability',
+        name: 'Sustainability',
+        component: SustainabilityView,
+        meta: { requiresAuth: true, feature: 'F22', title: 'Water & Sustainability Metrics' }
+      },
+      {
+        path: 'seed-vault',
+        name: 'SeedVault',
+        component: SeedVaultView,
+        meta: { requiresAuth: true, feature: 'F23', title: 'Seed Vault & Germination Logs' }
+      },
+      {
         path: 'help',
         name: 'DashboardHelp',
-        component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'help', title: 'Help Center' }
+        component: HelpCenterView,
+        meta: { requiresAuth: true, wrapInPanel: true, title: 'Help Center' }
       }
     ]
   },

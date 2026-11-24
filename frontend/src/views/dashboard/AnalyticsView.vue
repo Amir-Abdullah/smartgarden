@@ -1,5 +1,5 @@
 <template>
-  <ComingSoonView v-if="isF22Preview" />
+  <SustainabilityView v-if="isF22Preview" />
   <UDashboardPanel v-else id="analytics-view">
     <template #header>
       <UDashboardNavbar title="Analytics & Data Export">
@@ -241,7 +241,7 @@ import { useToast } from '@nuxt/ui/composables';
 import { useGardensStore } from '../../stores/gardens.js';
 import { useSprint4Store } from '../../stores/sprint4.js';
 import AlertBellButton from '../../components/AlertBellButton.vue';
-import ComingSoonView from '../ComingSoonView.vue';
+import SustainabilityView from './SustainabilityView.vue';
 
 const route = useRoute();
 const toast = useToast();

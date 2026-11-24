@@ -11,3 +11,4 @@ export { useAlertsStore } from './alerts';
 export { useRulesStore } from './rules';
 export { useHorticultureStore } from './horticulture';
 export { useSprint4Store } from './sprint4';
+export { useSprint5Store } from './sprint5';

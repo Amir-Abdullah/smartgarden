@@ -115,6 +115,14 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async updateProfile(payload) {
+      const response = await api.put('/auth/me', payload);
+      if (response.data?.data?.user) {
+        this.user = response.data.data.user;
+      }
+      return this.user;
+    },
+
     async forgotPassword(email) {
       this.loading = true;
       this.error = null;

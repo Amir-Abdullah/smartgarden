@@ -13,12 +13,14 @@
     >
       <template #headline>
         <UBadge color="primary" variant="subtle" size="lg" icon="i-lucide-sparkles">
-          Sprint 4 Live &bull; F1&ndash;F20 Horticulture, Analytics &amp; AI Platform
+          Sprint 5 Live &bull; All 24 Modules Live (F1&ndash;F24) + 3D Garden Twin
         </UBadge>
       </template>
 
       <template #bottom>
-        <UContainer class="pb-10">
+        <UContainer class="space-y-6 pb-10">
+          <HeroGardenScene3D />
+
           <div class="grid grid-cols-2 gap-4 rounded-2xl border border-zinc-200 bg-zinc-50/80 p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/60 sm:grid-cols-4">
             <div v-for="stat in stats" :key="stat.label" class="text-center">
               <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 sm:text-3xl">
@@ -37,8 +39,8 @@
     <UPageSection
       id="features"
       headline="Platform Capabilities"
-      title="24 Integrated Modules — 20 Live Today, 4 in Active Development"
-      description="Explore live core, IoT telemetry, horticulture, analytics, AI diagnostics, and community modules now, plus Sprint 5 notifications and developer platform capabilities."
+      title="24 Integrated Modules — All Live Today Across Sprints 1–5"
+      description="Explore live core planning, IoT telemetry, horticulture advisors, growth journals, AI diagnostics, sustainability scorecards, seed vault, and Three.js 3D Garden Twins."
     >
       <template #body>
         <div class="mb-8 flex flex-wrap items-center justify-center gap-2">
@@ -269,6 +271,7 @@ import api from '../../services/api.js';
 import { useAuthStore } from '../../stores/auth.js';
 import { FEATURES } from '../../config/features.js';
 import { useComingSoon } from '../../composables/useComingSoon.js';
+import HeroGardenScene3D from '../../components/three/HeroGardenScene3D.vue';
 
 const authStore = useAuthStore();
 const { open } = useComingSoon();
@@ -376,15 +379,14 @@ const heroLinks = computed(() => {
 
 const stats = [
   { value: '32+', label: 'Botanical Species' },
-  { value: '20 Live', label: 'Core, Telemetry, AI & Community (F1–F20)' },
-  { value: '3 Tiers', label: 'RBAC Collaboration' },
-  { value: '4 Soon', label: 'Sprint 5 Alerts & API Roadmap' }
+  { value: '24 Live', label: 'Full Platform Capabilities (F1–F24)' },
+  { value: '3D Twin', label: 'Interactive Three.js Garden View' },
+  { value: '3 Tiers', label: 'RBAC Collaboration' }
 ];
 
 const featureFilters = [
   { label: 'All (24)', value: 'all' },
-  { label: 'Live Now (F1–F20)', value: 'live' },
-  { label: 'Upcoming (F21–F24)', value: 'soon' }
+  { label: 'Live Now (F1–F24)', value: 'live' }
 ];
 
 const filteredFeatures = computed(() => {
@@ -439,7 +441,7 @@ const testimonials = [
 const faqItems = [
   {
     label: 'Which features are live right now vs. under development?',
-    content: 'Features F1–F20 are 100% live today across Sprints 1–4: Accounts & Security (F1), RBAC (F2), Gardens & Zones (F3), Plant Catalog (F4), Zone Inventory (F5), Care Tasks (F6), IoT Sensors (F7), Real-Time Live Dashboard (F8), Threshold Alerts (F9), Automation Rules (F10), Weather & Rain-Skip (F11), Planting Calendar (F12), Care Plans (F13), Recommendations (F14), Companion Advisor (F15), Growth Journal & Photo Timeline (F16), Analytics & CSV/PDF Export (F17), AI Leaf Diagnosis (F18), AI Gardening Assistant (F19), and Community Hub (F20). Features F21–F24 arrive in Sprint 5.'
+    content: 'All 24 features (F1–F24) plus interactive Three.js 3D Garden Twins are 100% live today across Sprints 1–5, including Multi-Channel Notifications (F21), Water & Sustainability Metrics (F22), Seed Vault (F23), and Scoped API Keys & Public Profiles (F24).'
   },
   {
     label: 'How does SmartGarden detect bed overcrowding?',

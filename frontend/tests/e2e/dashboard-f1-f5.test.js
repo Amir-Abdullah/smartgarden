@@ -78,19 +78,11 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
     assert.ok(liveAlertsText.includes('Recent Alerts'), 'Missing Recent Alerts card');
     assert.ok(liveAlertsText.includes('Soil moisture dropped below 35%'), 'Missing seeded alert');
 
-    await page.clickElementFromFn(
-      (title) => {
-        const cards = Array.from(document.querySelectorAll('div'));
-        return cards.find((el) => el.className.includes('cursor-pointer') && (el.innerText || '').includes(title)) || null;
-      },
-      'Preview widget "Multi-Channel Notifications" not found',
-      'Multi-Channel Notifications'
+    await page.waitFor(() => Boolean(document.querySelector('[data-testid="overview-3d-twin-card"] canvas')));
+    const liveTwinText = await page.eval(
+      () => document.querySelector('[data-testid="overview-3d-twin-card"]')?.innerText || ''
     );
-    await page.waitForText('Planned Capabilities');
-    await page.waitForText('Coming in Sprint 5');
-    await page.sleep(250);
-    await page.clickButton('Close', { within: '[role="dialog"]' });
-    await page.waitForTextGone('Planned Capabilities');
+    assert.ok(liveTwinText.includes('Interactive 3D Garden Twin'), 'Missing 3D Garden Twin preview card');
 
     assertCleanRuntime(page);
   });
@@ -185,6 +177,9 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
       await page.clickButton('Activity');
       await page.waitForText('Garden Activity Feed & Field Journal (F16)');
       await page.waitForText('Open Growth Journal');
+
+      await page.clickButton('3D Twin');
+      await page.waitFor(() => Boolean(document.querySelector('[data-testid="garden-plot-3d-canvas"]')));
 
       // Members tab lists Demo Gardener as OWNER
       await page.clickButton('Members');
@@ -452,7 +447,7 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
     assertCleanRuntime(page);
   });
 
-  it('Settings (/dashboard/settings) loads profile from /api/auth/me, triggers Save Coming Soon toast, links security, and opens ComingSoonModals', async () => {
+  it('Settings (/dashboard/settings) loads profile, saves updates, and displays live Notifications, Showcase & API Keys', async () => {
     page.clearDiagnostics();
     await page.goto(`${session.baseUrl}/dashboard/settings`);
     await page.waitForText('Account Profile');
@@ -465,23 +460,14 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
     assert.ok(profileValues.includes('demo@smartgarden.app'), `Expected demo@smartgarden.app in settings inputs: ${JSON.stringify(profileValues)}`);
 
     await page.clickButton('Save Profile');
-    await page.waitForText('Profile updates');
+    await page.waitForText('Profile Saved');
 
     const body = await page.getBodyText();
     assert.ok(body.includes('Request Reset Token'));
     assert.ok(body.includes('Enter Reset Token'));
-
-    for (const cardTitle of ['Notifications & Digests', 'Billing & Workspace Plan', 'Developer API Keys']) {
-      await page.clickElementFromFn(
-        (t) => Array.from(document.querySelectorAll('div')).find((el) => el.className.includes('cursor-pointer') && (el.innerText || '').includes(t)) || null,
-        `Settings card "${cardTitle}" not found`,
-        cardTitle
-      );
-      await page.waitForText('Planned Capabilities');
-      await page.sleep(250);
-      await page.clickButton('Close', { within: '[role="dialog"]' });
-      await page.waitForTextGone('Planned Capabilities');
-    }
+    assert.ok(body.includes('Multi-Channel Notifications & Webhooks (F21)'));
+    assert.ok(body.includes('Public Grower Showcase Profile (F24)'));
+    assert.ok(body.includes('Developer API Keys (sg_pat_) (F24)'));
 
     assertCleanRuntime(page);
   });

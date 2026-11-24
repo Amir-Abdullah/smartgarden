@@ -213,14 +213,7 @@ const desktopNavItems = computed(() => [
   { label: 'Plant Catalog', to: '/catalog' },
   { label: 'About', to: '/about' },
   { label: 'Contact', to: '/contact' },
-  {
-    label: 'Pricing',
-    badge: { label: 'Soon', color: 'primary', variant: 'subtle', size: 'xs' },
-    onSelect: (e) => {
-      e.preventDefault();
-      open('pricing');
-    }
-  }
+  { label: 'Pricing', to: '/pricing' }
 ]);
 
 const mobileNavItems = computed(() => [
@@ -228,15 +221,7 @@ const mobileNavItems = computed(() => [
   { label: 'Plant Catalog', icon: 'i-lucide-book-open', to: '/catalog' },
   { label: 'About', icon: 'i-lucide-info', to: '/about' },
   { label: 'Contact', icon: 'i-lucide-mail', to: '/contact' },
-  {
-    label: 'Pricing',
-    icon: 'i-lucide-credit-card',
-    badge: { label: 'Soon', color: 'primary', variant: 'subtle', size: 'xs' },
-    onSelect: (e) => {
-      e.preventDefault();
-      open('pricing');
-    }
-  }
+  { label: 'Pricing', icon: 'i-lucide-credit-card', to: '/pricing' }
 ]);
 
 function handleNewsletterSubmit() {

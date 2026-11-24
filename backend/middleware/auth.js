@@ -1,3 +1,5 @@
+const developerService = require('../services/developerService');
+
 async function verifyJwt(request, reply) {
   try {
     const authHeader = request.headers && (request.headers.authorization || request.headers.Authorization);
@@ -11,6 +13,18 @@ async function verifyJwt(request, reply) {
           statusCode: 401
         }
       });
+    }
+
+    const token = authHeader.slice(7).trim();
+    if (token.startsWith('sg_pat_')) {
+      const patAuth = await developerService.authenticatePat(token);
+      if (!patAuth) {
+        throw new Error('Invalid or revoked personal access token');
+      }
+      request.user = patAuth.user;
+      request.apiKeyScopes = patAuth.scopes;
+      request.apiKeyId = patAuth.keyId;
+      return;
     }
 
     if (typeof request.jwtVerify === 'function') {
