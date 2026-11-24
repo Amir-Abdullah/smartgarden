@@ -85,6 +85,17 @@ User Submits New Password (POST /api/auth/reset-password)
    - Invalidate all other pending reset tokens for this user.
 ```
 
+### 1.4 Supabase OAuth2 Google Authentication Architecture
+To support modern frictionless social authentication while preserving stateless backend JWT integrity, OAuth is federated through Supabase Auth:
+
+1. **Frontend Authorization Redirect:** Client initiates flow via Supabase Auth OAuth endpoint (`https://<project>.supabase.co/auth/v1/authorize?provider=google&redirect_to=<origin>/auth/callback`).
+2. **Provider Callback Handling:** The client catches the incoming authorization token at `/auth/callback` and dispatches `POST /api/auth/oauth` with `{ provider: 'google', access_token }`.
+3. **Server-Side Token Verification:** Fastify backend verifies the access token directly with the Supabase Auth server (`GET /auth/v1/user`), validating the user's Google email and unique subject ID (`google_id`).
+4. **Account Linkage & Provisioning:**
+   - If an account exists with matching `email` or `google_id`, the system attaches `google_id` if missing and generates a SmartGarden JWT.
+   - If no account exists, a new user is provisioned with high-entropy random password hash, linking the identity.
+5. **Standard Session Token:** Returns the standard HS256 JWT session token, ensuring all downstream RBAC and route protection mechanisms function identically.
+
 ---
 
 ## 2. Garden Role-Based Access Control (RBAC) Architecture

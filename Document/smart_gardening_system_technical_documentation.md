@@ -1,9 +1,9 @@
 # Smart Gardening System — Technical Architecture & Design Document
 
-**Version:** 1.1 (Architecture & System Design Update)  
+**Version:** 1.2 (PostgreSQL / Supabase, Render Backend & Vercel Multi-Service Deployment Update)  
 **Project:** Smart Gardening System (Full-Stack Single Page Application)  
 **Architecture Pattern:** Model–View–Controller (MVC) SPA with Fastify Hook Pipeline & WebSocket Broker  
-**Tech Stack:** Vue.js 3 (Plain JavaScript) · Node.js + Fastify (Plain JavaScript) · Sequelize ORM · MariaDB 10.11 · Docker  
+**Tech Stack:** Vue.js 3 + Nuxt UI v4 · Node.js + Fastify · Sequelize ORM · PostgreSQL (Supabase) / MariaDB / SQLite · Vercel & Render  
 **Status:** Approved Architecture Baseline  
 
 ---
@@ -12,10 +12,10 @@
 
 The Smart Gardening System is designed as an industrial-grade, decoupled **Single Page Application (SPA)** adhering strictly to the **MVC separation of concerns** and modern IoT cloud ingestion principles:
 
-* **View Layer (Vue.js 3 SPA):** Runs client-side in the browser. Employs Vue 3 Composition API (Plain JavaScript), Vue Router for client-side navigation, Pinia for reactive centralized state, Axios for REST communication, and Chart.js for real-time sensor dials and historical trend visualization.
-* **Middleware Pipeline Layer (Fastify Hooks):** Implements an ordered lifecycle execution chain. Validates JSON schemas, enforces rate limits, handles CORS and security headers, verifies stateless JWT sessions, resolves resource-to-garden hierarchies for Role-Based Access Control (RBAC), and authenticates IoT device API keys using constant-time hashed lookups.
-* **Controller & Service Layer (Node.js + Fastify):** Encapsulates pure business logic. Orchestrates Sequelize ORM operations, pushes real-time telemetry over WebSockets (`@fastify/websocket`), evaluates automation rules via a multi-tier deduplication engine, and interfaces with external weather, AI vision/LLM, and transactional SMTP email providers.
-* **Model & Persistence Layer (Sequelize + MariaDB 10.11):** Normalized relational schema in MariaDB InnoDB with UTF8MB4 collation. Supports dual-engine operation (`mariadb` for containerized and production deployments, and in-memory `sqlite` for deterministic, zero-dependency unit and integration test suites).
+* **View Layer (Vue.js 3 + Nuxt UI v4 SPA):** Runs client-side in the browser. Employs Vue 3 Composition API (Plain JavaScript), Nuxt UI v4 (`@nuxt/ui` 4.12) with Tailwind CSS v4, Vue Router for client-side navigation, Pinia for reactive centralized state, Axios for REST communication, and Chart.js for real-time sensor dials and historical trend visualization. Deployed as a high-performance static SPA on **Vercel** with local URL rewrite fallback.
+* **Middleware Pipeline Layer (Fastify Hooks):** Implements an ordered lifecycle execution chain. Validates JSON schemas, enforces rate limits, handles CORS and security headers, verifies stateless JWT sessions, verifies Supabase OAuth tokens, resolves resource-to-garden hierarchies for Role-Based Access Control (RBAC), and authenticates IoT device API keys using constant-time hashed lookups.
+* **Controller & Service Layer (Node.js + Fastify):** Encapsulates pure business logic. Orchestrates Sequelize ORM operations, pushes real-time telemetry over WebSockets (`@fastify/websocket`), evaluates automation rules via a multi-tier deduplication engine, and interfaces with external weather, AI vision/LLM, and transactional SMTP email providers. Deployed on **Render** as an always-on web service (`smartgarden-backend-6ie1.onrender.com`), seamlessly reverse-proxied from Vercel via `/api/*` rewrites.
+* **Model & Persistence Layer (Sequelize + Supabase PostgreSQL / MariaDB):** Normalized relational schema in PostgreSQL (Supabase pooler on port 6543) and MariaDB. Supports multi-engine operation (`postgres` on Supabase for cloud production, `mariadb` for containerized environments, and in-memory `sqlite` for deterministic, zero-dependency unit and integration test suites).
 * **Dual IoT Telemetry Ingestion Layer:** Ingests live environmental readings via an authenticated HTTP/REST endpoint (`POST /api/sensors/ingest`), supporting both the software-based Node.js sensor simulator and own-brand physical gardening hardware ("SmartGarden Pro" ESP32-S3) with an architecture primed for future MQTT broker integration.
 
 ### High-Level System Architecture Diagram
@@ -71,18 +71,18 @@ The Smart Gardening System is designed as an industrial-grade, decoupled **Singl
 
 | Layer | Technology | Version / Packages | Purpose & Justification |
 | :--- | :--- | :--- | :--- |
-| **Frontend (View)** | **Vue.js 3** (Plain JS) | `vue` ^3.4, `vue-router` ^4.3, `pinia` ^2.1, `chart.js` ^4.4, `axios` ^1.6 | Component-driven reactive SPA, route guards, centralized auth/garden state, real-time sensor dials, and historical trend visualization. |
-| **Frontend Build** | **Vite** | `vite` ^5.2 | Ultra-fast local development server with Hot Module Replacement (HMR) and production bundling, including API dev proxy to Fastify. |
-| **Backend Runtime** | **Node.js** (Plain JS) | Node v20 LTS+ | Modern CommonJS runtime; single MERN-stack component; strict plain JavaScript standard without TypeScript compilation complexity. |
-| **Backend Framework** | **Fastify** | `fastify` ^4.26, `@fastify/cors`, `@fastify/helmet`, `@fastify/rate-limit` | Low-overhead HTTP engine supporting JSON schema validation, lifecycle preHandler hooks, and native asynchronous execution. |
+| **Frontend (View)** | **Vue.js 3 + Nuxt UI v4** | `vue` ^3.5, `@nuxt/ui` ^4.12, `@tailwindcss/vite` ^4.3, `tailwindcss` ^4.3, `vue-router` ^4.6, `pinia` ^2.3, `axios` ^1.20 | Production-ready component system, dark/light theme, accessible forms, responsive layout, route guards, and centralized state. |
+| **Frontend Build & Hosting** | **Vite on Vercel** | `vite` ^5.4, Vercel SPA | High-speed local dev server and static SPA deployment on Vercel with localized `/index.html` rewrite and `/api/*` proxy rewrite to Render. |
+| **Backend Runtime & Hosting**| **Node.js on Render** | Node v20 LTS+, Render Web Service | Always-on Node.js runtime executing the Fastify server, native WebSockets, background tasks, and connection poolers without serverless cold-start limitations. |
+| **Backend Framework** | **Fastify** | `fastify` ^4.28, `@fastify/cors`, `@fastify/jwt` | Low-overhead HTTP engine supporting dual routing (`/api/*` and direct `/*`), lifecycle hooks, and serverless compatibility adapters. |
 | **Real-Time Engine** | **Fastify WebSocket** | `@fastify/websocket` ^10.0 | Bidirectional WebSocket pub/sub broker distributing live telemetry and alert toasts to authenticated garden subscriber channels. |
-| **Authentication** | **JWT & Crypto** | `@fastify/jwt` ^8.0, `bcryptjs` ^2.4, Node `crypto` | Stateless HMAC-SHA256 JWT tokens (7-day TTL), salted bcrypt password hashing (cost factor 10), and 32-byte crypto reset tokens. |
+| **Authentication** | **JWT, Bcrypt & Supabase OAuth** | `@fastify/jwt` ^8.0, `bcryptjs` ^3.0, Supabase Auth | Dual authentication: salted bcrypt passwords + stateless JWTs, plus Supabase Google OAuth (`POST /api/auth/oauth` with frontend `/auth/callback`). |
 | **File Handling** | **Multipart & Storage** | `@fastify/multipart` ^8.1 | High-throughput streaming multipart handler for plant growth photos and leaf disease diagnostic uploads (max 5 MB). |
 | **Background Cron** | **Node-Cron** | `node-cron` ^3.0 | In-process cron workers executing 15-minute automation rule evaluations, 6-hour severe weather warnings, and daily telemetry downsampling. |
-| **ORM (Model)** | **Sequelize** | `sequelize` ^6.37, `mariadb` ^3.3, `sqlite3` ^5.1 | Relational ORM managing programmatic migrations, seeders, foreign-key cascades, and supporting dual dialects (`mariadb` / `sqlite`). |
-| **Database** | **MariaDB** | MariaDB 10.11 LTS | Primary relational database utilizing InnoDB storage engine with UTF8MB4 encoding for rich character support. |
+| **ORM (Model)** | **Sequelize** | `sequelize` ^6.37, `pg` ^8.11, `mariadb` ^3.5, `sqlite3` ^5.1 | Multi-dialect ORM managing schema migrations and seeders across PostgreSQL (Supabase), MariaDB, and in-memory SQLite for automated tests. |
+| **Database** | **PostgreSQL (Supabase) / MariaDB** | PostgreSQL 15+ (Supabase) / MariaDB 10.11 | Production database provisioned on Supabase PostgreSQL with transaction pooler (port 6543) and SSL, with MariaDB compatibility. |
 | **Reporting** | **PDF & CSV Engines** | `pdfkit` ^0.15, `json2csv` ^6.0 | Compiles downloadable PDF summary reports and CSV spreadsheets covering water consumption, task compliance, and sensor analytics. |
-| **Containerization**| **Docker Compose** | Compose v2 | Local container orchestration provisioning the MariaDB service with persistent volume storage and automated healthchecks. |
+| **Containerization**| **Docker Compose** | Compose v2 | Optional local container orchestration provisioning database services with persistent volume storage and automated healthchecks. |
 
 ---
 
@@ -297,7 +297,7 @@ All asynchronous workers run within Node.js utilizing `node-cron` with centraliz
 
 | ID | Feature Name | Core Technical Implementation Summary | Milestone | Primary Actors |
 | :--- | :--- | :--- | :---: | :--- |
-| **F1** | **Accounts & Authentication** | Salted bcrypt password hashing (cost 10), stateless JWT tokens (`@fastify/jwt`, 7-day TTL), crypto 32-byte password reset tokens stored via SHA-256 hashes with 60-min expiration. | M3 (Sprint 1) | All Users |
+| **F1** | **Accounts & Authentication** | Salted bcrypt password hashing (cost 10), stateless JWT tokens (`@fastify/jwt`, 7-day TTL), crypto 32-byte password reset tokens stored via SHA-256 hashes with 60-min expiration, and Supabase Google OAuth (`POST /api/auth/oauth` with frontend `/auth/callback`). | M3 (Sprint 1) | All Users |
 | **F2** | **Role-Based Access Control** | Per-garden membership roles (`OWNER`, `FAMILY`, `GUEST`), time-bounded guest expiration, tokenized invitation workflow (issuance, listing, cancellation, acceptance/rejection), member role updates/removals, and route-level resource resolver with IDOR compound scoping. | M4 (Sprint 1) | Garden Owner, Collaborators |
 | **F3** | **Garden & Zone Management** | Multi-garden management with IANA timezone validation, coordinates, and zone partitioning with `is_outdoor` flags, soil types, sunlight levels, and positive area check constraint (`chk_zones_area`). | M5 (Sprint 1) | Garden Owner, Family |
 | **F4** | **Plant Catalog & Reference** | Comprehensive master encyclopedia with search, sunlight/category filters, pagination, care thresholds, spatial spacing attributes (`spacing_cm`), and full admin CRUD (`POST/PUT/DELETE /api/catalog`). | M6 (Sprint 1) | All Users, System Admin |

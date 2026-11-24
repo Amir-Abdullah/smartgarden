@@ -75,6 +75,34 @@ All client and server errors conform strictly to an RFC 7807-inspired schema, de
 
 ## 2. REST Endpoints Specification
 
+> **Dual Prefix Compatibility Note:** All endpoints below are registered under both `/api/<path>` and `/<path>` (e.g. `/api/health` and `/health`, `/api/gardens` and `/gardens`). This ensures reverse proxy rewrites (such as Vercel rewrites to Render backend) function without URL trimming failures.
+
+### 2.0 System Diagnostics & Health
+
+#### `GET /api/health` (also `GET /health`)
+* **Access:** Public
+* **Success Response (200 OK):**
+  ```json
+  {
+    "status": "ok",
+    "version": "1.0.2-supabase",
+    "timestamp": "2026-11-24T02:00:00.000Z",
+    "db": "connected",
+    "dialect": "postgres"
+  }
+  ```
+* **Degraded Response (200 OK with db error):**
+  ```json
+  {
+    "status": "ok",
+    "version": "1.0.2-supabase",
+    "timestamp": "2026-11-24T02:00:00.000Z",
+    "db": "error",
+    "dialect": "postgres",
+    "error": "Connection timeout / pool exhausted"
+  }
+  ```
+
 ### 2.1 Authentication & Account Management (F1)
 
 #### `POST /api/auth/register`
@@ -128,6 +156,36 @@ All client and server errors conform strictly to an RFC 7807-inspired schema, de
   ```
 * **Success Response (200 OK):** Returns `{ success: true, data: { user, token } }`.
 * **Error Response (401 Unauthorized):** `{ success: false, error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password.", statusCode: 401 } }`.
+
+#### `POST /api/auth/oauth`
+* **Access:** Public (Supabase OAuth Token Exchange)
+* **Description:** Verifies an OAuth provider access token (e.g., Google Sign-In through Supabase Auth), links existing accounts by email or `google_id`, auto-creates user profiles if first-time sign-in, and returns an internal SmartGarden JWT session token.
+* **Request Body:**
+  ```json
+  {
+    "provider": "google",
+    "access_token": "sb-access-token-from-provider..."
+  }
+  ```
+* **Success Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "user": {
+        "id": 1,
+        "name": "Amir Abdullah",
+        "email": "abdullahamir142@gmail.com",
+        "google_id": "google-oauth2-10829381...",
+        "location_region": "US-East",
+        "is_admin": true,
+        "created_at": "2026-11-23T20:00:00.000Z"
+      },
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+  }
+  ```
+* **Error Response (401 Unauthorized):** `{ success: false, error: { code: "INVALID_OAUTH_TOKEN", message: "OAuth token is invalid, expired, or rejected by provider.", statusCode: 401 } }`.
 
 #### `GET /api/auth/me`
 * **Access:** Authenticated (`verifyJwt`)

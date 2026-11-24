@@ -1,7 +1,7 @@
 # Smart Gardening System — Database Schema & Data Dictionary
 
-**Document Version:** 1.1  
-**Database Engine:** MariaDB 10.11 LTS (InnoDB, `utf8mb4_unicode_ci`)  
+**Document Version:** 1.2  
+**Database Engines:** PostgreSQL 15+ (Supabase Transaction Pooler, port 6543) · MariaDB 10.11 LTS · SQLite (In-Memory Tests)  
 **ORM Framework:** Sequelize ORM (Plain JavaScript / CommonJS)  
 **Status:** Approved Architectural Specification  
 
@@ -12,15 +12,15 @@
 The Smart Gardening System relational data model is designed to support high-frequency IoT sensor telemetry ingestion, strict garden-level multi-tenant role isolation, botanical encyclopedic reference data, autonomous rule processing, and social collaboration.
 
 ### 1.1 Core Engineering Conventions
-* **Storage Engine:** MariaDB **InnoDB** across all tables to enforce strict ACID transactional guarantees and foreign key referential integrity.
-* **Character Set & Collation:** `utf8mb4` with `utf8mb4_unicode_ci` collation, supporting full multilingual character sets and emoji descriptions in notes and community posts.
+* **Storage Engine & RDBMS:** Production deployments utilize **PostgreSQL on Supabase** with transaction connection pooling (`aws-0-ap-southeast-2.pooler.supabase.com:6543`), supporting SSL and high-concurrency connections. Containerized and local environments support MariaDB 10.11 (InnoDB).
+* **Character Set & Collation:** UTF-8 encoding across all entities, supporting full multilingual character sets and emoji descriptions in notes and community posts.
 * **Identifier Naming Conventions:**
   * Table names: Lowercase snake_case, pluralized (e.g., `garden_members`, `sensor_readings`, `water_usage_logs`).
   * Column names: Lowercase snake_case (e.g., `user_id`, `is_outdoor`, `recorded_at`).
-  * Primary Keys: Single-column unsigned integers named `id` (`INT UNSIGNED AUTO_INCREMENT` or `BIGINT UNSIGNED AUTO_INCREMENT` for high-volume logs).
+  * Primary Keys: Single-column unsigned integers named `id` (`INT / SERIAL / BIGINT AUTO_INCREMENT`).
   * Foreign Keys: Target entity singular name followed by `_id` (e.g., `garden_id`, `author_id`, `zone_plant_id`).
   * Timestamps: Standard audit timestamps `created_at` and `updated_at` on mutable entities; immutable logs track single timestamp columns (`recorded_at`, `triggered_at`).
-* **Dual-Dialect Testing Strategy:** While MariaDB 10.11 is the containerized and production database engine, all Sequelize models and migrations are dialect-agnostic, supporting zero-dependency in-memory `sqlite` execution for automated unit and integration tests.
+* **Multi-Dialect Strategy:** All Sequelize models, migrations, and seed scripts are dialect-agnostic, seamlessly executing on Supabase PostgreSQL in production, MariaDB in local/docker environments, and in-memory `sqlite` for automated unit and integration tests.
 
 ---
 

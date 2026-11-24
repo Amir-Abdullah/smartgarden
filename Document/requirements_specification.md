@@ -75,6 +75,7 @@ This document serves as the authoritative functional and non-functional requirem
   * **F1.3 Session Verification:** Protected routes validate the `Authorization: Bearer <token>` header, attaching the verified user object (`id`, `email`, `name`, `is_admin`) to `request.user`.
   * **F1.4 Password Reset Request:** Users trigger reset via `POST /api/auth/forgot-password`. If the email exists, the system generates a cryptographically secure 32-byte random hex token, stores its SHA-256 hash in `password_reset_tokens` with a 60-minute expiration, and dispatches a reset link via email. Always returns generic success to prevent email enumeration.
   * **F1.5 Password Reset Execution:** Users submit `POST /api/auth/reset-password` with `token` and `new_password`. The system validates the token hash, verifies `expires_at > NOW()` and `used_at IS NULL`, updates the user's password hash, and marks `used_at = NOW()`.
+  * **F1.6 OAuth2 Google Sign-In:** Users can authenticate via Google OAuth delegated to Supabase Auth (`/auth/callback` in frontend SPA). `POST /api/auth/oauth` verifies the incoming access token against Supabase Auth API, matches/links existing accounts via `email` or `google_id`, or provisions new accounts, returning a standardized SmartGarden JWT.
 
 ### F2: Role-Based Access Control (RBAC) & Invitations
 * **Objective:** Enable multi-user garden collaboration while enforcing fine-grained role privileges across gardens, zones, plants, and tasks.
@@ -397,9 +398,10 @@ This document serves as the authoritative functional and non-functional requirem
 * **NFR-4.3 Relational Cascades:** Deleting root entities (such as a Garden) must leverage MariaDB InnoDB foreign key cascading (`ON DELETE CASCADE`) to prevent orphaned rows across all 21 entities.
 
 ### NFR-5: Technology Stack & Architectural Compliance
-* **NFR-5.1 Pure JavaScript Standard:** All application source code across backend and frontend must use plain JavaScript (`.js`). No TypeScript or extraneous transpilation layers.
-* **NFR-5.2 Stack Constraints:** Strict adherence to Node.js v20 LTS, Fastify, Sequelize ORM, Vue 3 SPA with Vite, and MariaDB 10.11 in Docker. No Express, MongoDB, or React dependencies.
-* **NFR-5.3 Clean Monorepo Scaffold:** Workspaces configured via root `package.json` coordinating `backend/` and `frontend/` services with unified development scripts.
+* **NFR-5.1 Pure JavaScript Standard:** All application source code across backend and frontend must use plain JavaScript (`.js`). Typescript type-checking (`tsconfig.json`) is maintained purely for IDE path resolution and editor tooling without compile steps.
+* **NFR-5.2 Stack Constraints:** Strict adherence to Node.js v20 LTS, Fastify web framework, Sequelize ORM (supporting PostgreSQL on Supabase, MariaDB/MySQL, and SQLite in-memory), Vue 3 SPA with Vite, Nuxt UI v4 (`@nuxt/ui` 4.12), and Tailwind CSS v4. No Express, MongoDB, or React dependencies.
+* **NFR-5.3 Deployment Topology:** Dual cloud architecture with Frontend hosted on Vercel as a client-side SPA (with root `vercel.json` rewrite routing), Backend hosted as an always-on service on Render (`smartgarden-backend-6ie1.onrender.com`), and relational database provisioned on Supabase PostgreSQL with transaction pooling.
+* **NFR-5.4 Clean Monorepo Scaffold:** Workspaces configured via root `package.json` coordinating `backend/` and `frontend/` services with unified development scripts.
 
 ---
 
