@@ -6,6 +6,7 @@
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
+          <AlertBellButton />
           <UColorModeButton />
           <UButton
             to="/dashboard"
@@ -163,6 +164,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useToast } from '@nuxt/ui/composables';
 import { getFeatureById } from '../config/features.js';
+import AlertBellButton from '../components/AlertBellButton.vue';
 
 const route = useRoute();
 const toast = useToast();

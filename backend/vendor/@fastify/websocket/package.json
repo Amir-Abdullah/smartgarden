@@ -1,0 +1,6 @@
+{
+  "name": "@fastify/websocket",
+  "version": "10.0.1",
+  "description": "WebSocket support for Fastify (pure Node.js RFC 6455)",
+  "main": "index.js"
+}

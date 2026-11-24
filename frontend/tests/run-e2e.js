@@ -8,10 +8,10 @@ const __dirname = path.dirname(__filename);
 const FRONTEND_DIR = path.resolve(__dirname, '..');
 
 async function main() {
-  console.log('[E2E Runner] Starting live MariaDB-backed Fastify API & built frontend server...');
+  console.log('[E2E Runner] Starting Fastify API & built frontend server...');
   const env = await startE2EEnvironment();
   console.log(`[E2E Runner] Backend API: ${env.apiBaseUrl} (dialect=${env.dialect})`);
-  console.log(`[E2E Runner] Frontend SPA + /api proxy: ${env.baseUrl}`);
+  console.log(`[E2E Runner] Frontend SPA + /api + /ws proxy: ${env.baseUrl}`);
 
   let exitCode = 1;
   try {
@@ -26,6 +26,7 @@ async function main() {
           'tests/e2e/public-pages.test.js',
           'tests/e2e/auth-flows.test.js',
           'tests/e2e/dashboard-f1-f5.test.js',
+          'tests/e2e/sprint2-f6-f10.test.js',
           'tests/e2e/coming-soon-and-edges.test.js'
         ],
         {

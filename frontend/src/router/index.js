@@ -20,6 +20,10 @@ import OverviewView from '../views/dashboard/OverviewView.vue';
 import GardensView from '../views/dashboard/GardensView.vue';
 import GardenDetailView from '../views/dashboard/GardenDetailView.vue';
 import ZonePlantsView from '../views/dashboard/ZonePlantsView.vue';
+import CareTasksView from '../views/dashboard/CareTasksView.vue';
+import SensorsView from '../views/dashboard/SensorsView.vue';
+import AlertsView from '../views/dashboard/AlertsView.vue';
+import AutomationsView from '../views/dashboard/AutomationsView.vue';
 import SettingsView from '../views/dashboard/SettingsView.vue';
 
 import ComingSoonView from '../views/ComingSoonView.vue';
@@ -154,7 +158,7 @@ const routes = [
         path: '',
         name: 'DashboardOverview',
         component: OverviewView,
-        meta: { requiresAuth: true, feature: 'F3', title: 'Dashboard Overview' }
+        meta: { requiresAuth: true, feature: 'F8', title: 'Dashboard Overview' }
       },
       {
         path: 'gardens',
@@ -189,68 +193,86 @@ const routes = [
       {
         path: 'care-tasks',
         name: 'CareTasks',
-        component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F6', title: 'Care Tasks & Schedules' }
+        component: CareTasksView,
+        meta: { requiresAuth: true, feature: 'F6', title: 'Care Tasks & Watering' }
       },
       {
         path: 'sensors',
         name: 'Sensors',
-        component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F7', title: 'IoT Soil & Climate Sensors' }
+        component: SensorsView,
+        meta: { requiresAuth: true, feature: 'F7', title: 'IoT Sensors & Telemetry' }
       },
       {
         path: 'alerts',
         name: 'Alerts',
-        component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F8', title: 'Smart Threshold Alerts' }
+        component: AlertsView,
+        meta: { requiresAuth: true, feature: 'F9', title: 'Smart Threshold Alerts' }
       },
       {
         path: 'automations',
         name: 'Automations',
-        component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F9', title: 'Irrigation & Climate Automations' }
+        component: AutomationsView,
+        meta: { requiresAuth: true, feature: 'F10', title: 'Automation Rules' }
       },
       {
         path: 'weather',
         name: 'Weather',
         component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F10', title: 'Hyperlocal Weather & Frost' }
+        meta: { requiresAuth: true, feature: 'F11', title: 'Weather-Aware Planning & Spatial Cache' }
       },
       {
         path: 'calendar',
         name: 'PlantingCalendar',
         component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F11', title: 'Dynamic Planting Calendar' }
+        meta: { requiresAuth: true, feature: 'F12', title: 'Seasonal Planting Calendar' }
+      },
+      {
+        path: 'care-plans',
+        name: 'CarePlans',
+        component: ComingSoonView,
+        meta: { requiresAuth: true, feature: 'F13', title: 'Personalized Care Plan Generator' }
+      },
+      {
+        path: 'recommendations',
+        name: 'Recommendations',
+        component: ComingSoonView,
+        meta: { requiresAuth: true, feature: 'F14', title: 'Plant Recommendation Engine' }
+      },
+      {
+        path: 'companions',
+        name: 'Companions',
+        component: ComingSoonView,
+        meta: { requiresAuth: true, feature: 'F15', title: 'Companion Planting Advisor' }
       },
       {
         path: 'journal',
         name: 'Journal',
         component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F12', title: 'Garden Journal & Photos' }
+        meta: { requiresAuth: true, feature: 'F16', title: 'Growth Journal & Photo Timeline' }
       },
       {
         path: 'analytics',
         name: 'Analytics',
         component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F13', title: 'Yield & Soil Analytics' }
+        meta: { requiresAuth: true, feature: 'F17', title: 'Analytics & Data Export' }
       },
       {
         path: 'ai-diagnosis',
         name: 'AiDiagnosis',
         component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F14', title: 'AI Pest & Disease Diagnosis' }
+        meta: { requiresAuth: true, feature: 'F18', title: 'AI Leaf Disease & Pest Diagnosis' }
       },
       {
         path: 'ai-assistant',
         name: 'AiAssistant',
         component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F15', title: 'AI Agronomist Assistant' }
+        meta: { requiresAuth: true, feature: 'F19', title: 'AI Gardening Assistant' }
       },
       {
         path: 'community',
         name: 'Community',
         component: ComingSoonView,
-        meta: { requiresAuth: true, feature: 'F16', title: 'Community Garden Exchange' }
+        meta: { requiresAuth: true, feature: 'F20', title: 'Community Hub & Social Feed' }
       },
       {
         path: 'help',

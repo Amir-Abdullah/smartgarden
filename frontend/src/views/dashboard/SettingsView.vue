@@ -6,6 +6,7 @@
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
+          <AlertBellButton />
           <UColorModeButton />
         </template>
       </UDashboardNavbar>
@@ -149,6 +150,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useAuthStore } from '../../stores/auth.js';
 import { useComingSoon } from '../../composables/useComingSoon.js';
+import AlertBellButton from '../../components/AlertBellButton.vue';
 
 const authStore = useAuthStore();
 const { open, notify } = useComingSoon();
@@ -164,11 +166,11 @@ const profileForm = reactive({
 const soonSettingsCards = [
   {
     id: 'notifications',
-    featureKey: 'F17',
+    featureKey: 'F21',
     title: 'Notifications & Digests',
     description: 'Configure email, Web Push, and Slack/Discord alerts for frost warnings and daily care queues.',
     icon: 'i-lucide-mail',
-    sprint: 6
+    sprint: 5
   },
   {
     id: 'billing',
@@ -180,11 +182,11 @@ const soonSettingsCards = [
   },
   {
     id: 'apikeys',
-    featureKey: 'F20',
+    featureKey: 'F24',
     title: 'Developer API Keys',
     description: 'Generate scoped personal access tokens for Home Assistant, MQTT bridges, and custom scripts.',
     icon: 'i-lucide-key-round',
-    sprint: 6
+    sprint: 5
   }
 ];
 

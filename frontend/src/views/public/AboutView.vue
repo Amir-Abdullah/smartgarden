@@ -26,7 +26,7 @@
             Home growers and community gardens shouldn&rsquo;t need scattered spreadsheets and guesswork to pair companion crops or prevent root overcrowding. SmartGarden started with a simple question: what if your garden layout checked plant spacing, soil preferences, and companion conflicts automatically?
           </p>
           <p class="leading-relaxed text-zinc-600 dark:text-zinc-300">
-            In Sprint 1, we shipped the core platform (F1&ndash;F5) powered by a dual-dialect MariaDB/SQLite Fastify API and a Nuxt UI 4 frontend. Over Sprints 2&ndash;6, we are layering on care task queues, live IoT sensor streams, hyperlocal frost alerts, and context-aware AI agronomy.
+            In Sprints 1&ndash;2, we shipped the core platform and real-time operations suite (F1&ndash;F10) powered by a dual-dialect PostgreSQL/SQLite Fastify API, WebSocket/SSE streams, and a Nuxt UI 4 frontend. Over Sprints 3&ndash;5, we are layering on hyperlocal weather planning, planting calendars, AI agronomy, and community collaboration.
           </p>
         </div>
 
@@ -72,7 +72,7 @@
       <div class="mx-auto mb-10 max-w-2xl text-center">
         <UBadge color="primary" variant="subtle" class="mb-3">Live Product Roadmap</UBadge>
         <h2 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-3xl">
-          Sprint Roadmap (F1&ndash;F20)
+          Sprint Roadmap (F1&ndash;F24)
         </h2>
         <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           Dynamically generated from our feature registry — click any upcoming module to inspect its upcoming scope.

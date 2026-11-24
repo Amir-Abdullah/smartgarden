@@ -1,0 +1,6 @@
+{
+  "name": "@fastify/cors",
+  "version": "9.0.1",
+  "description": "Fastify CORS plugin",
+  "main": "index.js"
+}

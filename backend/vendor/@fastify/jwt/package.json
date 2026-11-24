@@ -1,0 +1,6 @@
+{
+  "name": "@fastify/jwt",
+  "version": "8.0.1",
+  "description": "JWT authentication plugin for Fastify",
+  "main": "index.js"
+}

@@ -16,7 +16,7 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     if (session) await session.teardown();
   });
 
-  it('Landing page (/) renders hero, stats, F1-F20 cards, 3-step guide, 6-plant preview, testimonials, FAQ, CTA, and dark mode toggle', async () => {
+  it('Landing page (/) renders hero, stats, F1-F24 cards, 3-step guide, 6-plant preview, testimonials, FAQ, CTA, and dark mode toggle', async () => {
     page.clearDiagnostics();
     await page.goto(`${session.baseUrl}/`);
     await page.waitForText('Grow Smarter. Cultivate Resilient Gardens.');
@@ -24,37 +24,39 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     const body = await page.getBodyText();
 
     // Stat strip
-    for (const stat of ['32+', '5 Live', '3 Tiers', '15 Soon']) {
+    for (const stat of ['32+', '10 Live', '3 Tiers', '14 Soon']) {
       assert.ok(body.includes(stat), `Landing page missing stat "${stat}"`);
     }
 
-    // F1-F20 feature cards
+    // F1-F24 feature cards
     assert.ok(body.includes('Accounts & Security'), 'Missing F1 feature card');
     assert.ok(body.includes('Zone Crop Inventory'), 'Missing F5 feature card');
-    assert.ok(body.includes('Care Tasks & Schedules'), 'Missing F6 feature card');
-    assert.ok(body.includes('Public Profiles & API Keys'), 'Missing F20 feature card');
+    assert.ok(body.includes('Recurring Care Tasks & Watering'), 'Missing F6 feature card');
+    assert.ok(body.includes('Automation Rule Engine'), 'Missing F10 feature card');
+    assert.ok(body.includes('Public Profiles & Scoped API Keys'), 'Missing F24 feature card');
 
-    // Filter tabs: Live Now (F1-F5) vs Upcoming (F6-F20)
-    await page.clickButton('Live Now (F1–F5)');
-    await page.waitForTextGone('Care Tasks & Schedules');
+    // Filter tabs: Live Now (F1-F10) vs Upcoming (F11-F24)
+    await page.clickButton('Live Now (F1–F10)');
+    await page.waitForTextGone('Weather-Aware Planning & Spatial Cache');
     assert.ok((await page.getBodyText()).includes('Accounts & Security'));
+    assert.ok((await page.getBodyText()).includes('Recurring Care Tasks & Watering'));
 
-    await page.clickButton('Upcoming (F6–F20)');
-    await page.waitForText('Care Tasks & Schedules');
+    await page.clickButton('Upcoming (F11–F24)');
+    await page.waitForText('Weather-Aware Planning & Spatial Cache');
     assert.ok(!(await page.getBodyText()).includes('Accounts & Security'));
 
     // Click an upcoming feature card -> opens ComingSoonModal
     await page.eval(() => {
       const cards = Array.from(document.querySelectorAll('#features div, #features a'));
-      const f6 = cards.find((el) => (el.innerText || '').includes('Care Tasks & Schedules') && el.className.includes('cursor-pointer'));
-      if (f6) f6.click();
+      const f11 = cards.find((el) => (el.innerText || '').includes('Weather-Aware Planning & Spatial Cache') && el.className.includes('cursor-pointer'));
+      if (f11) f11.click();
     });
     await page.waitForText('Planned Capabilities');
-    await page.waitForText('Coming in Sprint 2');
+    await page.waitForText('Coming in Sprint 3');
     await page.clickButton('Close', { within: '[role="dialog"]' });
     await page.waitForTextGone('Planned Capabilities');
 
-    await page.clickButton('All (20)');
+    await page.clickButton('All (24)');
     await page.waitForText('Accounts & Security');
 
     // 3-step guide
@@ -131,22 +133,23 @@ describe('E2E: Public Pages, Dark Mode & Coming Soon Modals', () => {
     page.clearDiagnostics();
     await page.goto(`${session.baseUrl}/about`);
     await page.waitForText('Building Calm, Science-Backed Tools for Modern Growers');
-    await page.waitForText('Sprint Roadmap (F1–F20)');
+    await page.waitForText('Sprint Roadmap (F1–F24)');
 
     const body = await page.getBodyText();
     assert.ok(body.includes('Sprint 1 — Live Foundation'));
-    assert.ok(body.includes('Sprint 2 — Planned'));
-    assert.ok(body.includes('Sprint 6 — Planned'));
+    assert.ok(body.includes('Sprint 2 — Live Operations & Telemetry'));
+    assert.ok(body.includes('Sprint 3 — Planned'));
+    assert.ok(body.includes('Sprint 5 — Planned'));
     assert.ok(body.includes('Accounts & Security'));
-    assert.ok(body.includes('Public Profiles & API Keys'));
+    assert.ok(body.includes('Public Profiles & Scoped API Keys'));
 
     // Clicking a planned feature card opens ComingSoonModal
     await page.clickElementFromFn(
       () => {
         const cards = Array.from(document.querySelectorAll('#roadmap div'));
-        return cards.find((el) => (el.innerText || '').includes('Care Tasks & Schedules') && el.className.includes('cursor-pointer')) || null;
+        return cards.find((el) => (el.innerText || '').includes('Weather-Aware Planning & Spatial Cache') && el.className.includes('cursor-pointer')) || null;
       },
-      'Roadmap F6 card not found'
+      'Roadmap F11 card not found'
     );
     await page.waitForText('Planned Capabilities');
     await page.sleep(250);

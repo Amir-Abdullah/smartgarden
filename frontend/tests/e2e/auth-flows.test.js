@@ -17,19 +17,18 @@ describe('E2E: Authentication Flows (/login, /register, /forgot-password, /reset
     if (session) await session.teardown();
   });
 
-  it('Login page triggers Coming Soon toasts for Google & GitHub and logs in via "Try the demo"', async () => {
+  it('Login page renders Google OAuth provider, triggers Coming Soon toast for GitHub, and logs in via "Try the demo"', async () => {
     page.clearDiagnostics();
     await page.goto(`${session.baseUrl}/login`);
     await page.waitForText('Sign in to SmartGarden');
-
-    await page.clickButton('Continue with Google');
-    await page.waitForText('Social sign-in');
+    await page.waitForText('Continue with Google');
 
     await page.clickButton('Continue with GitHub');
+    await page.waitForText('Social sign-in');
     await page.waitForText('GitHub OAuth sign-in is scheduled for a later sprint.');
 
     // Wait for toast overlay to auto-dismiss so it doesn't cover "Try the demo"
-    await page.waitForTextGone('Google OAuth sign-in is scheduled for a later sprint.');
+    await page.waitForTextGone('GitHub OAuth sign-in is scheduled for a later sprint.');
     await page.clickButton('Try the demo');
     await page.waitForUrl('/dashboard');
     await page.waitForText('Welcome back, Demo Gardener');

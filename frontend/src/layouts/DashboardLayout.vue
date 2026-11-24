@@ -82,6 +82,7 @@
               <UDashboardSidebarCollapse />
             </template>
             <template #right>
+              <AlertBellButton />
               <UColorModeButton />
             </template>
           </UDashboardNavbar>
@@ -101,8 +102,14 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import api from '../services/api.js';
 import { DASHBOARD_NAV_SECTIONS } from '../config/features.js';
+import { useGardensStore } from '../stores/gardens.js';
+import { useAlertsStore } from '../stores/alerts.js';
 import AppLogo from '../components/AppLogo.vue';
 import UserMenu from '../components/UserMenu.vue';
+import AlertBellButton from '../components/AlertBellButton.vue';
+
+const gardensStore = useGardensStore();
+const alertsStore = useAlertsStore();
 
 const sidebarOpen = ref(false);
 const sidebarCollapsed = ref(false);
@@ -111,24 +118,36 @@ const healthStatus = ref('checking'); // 'online' | 'degraded' | 'checking' | 'o
 const healthDb = ref('');
 let healthIntervalId = null;
 
-function mapSoonItem(item) {
+function mapNavItem(item) {
   let target = item.to;
-  if (item.id === 'F19') {
-    target = '/dashboard/calendar?feature=F19';
-  } else if (item.id === 'F18') {
-    target = '/dashboard/analytics?feature=F18';
+  if (item.id === 'F23') {
+    target = '/dashboard/calendar?feature=F23';
+  } else if (item.id === 'F22') {
+    target = '/dashboard/analytics?feature=F22';
+  }
+
+  let badge;
+  if (item.status === 'soon') {
+    badge = {
+      label: 'Soon',
+      color: 'primary',
+      variant: 'subtle',
+      size: 'xs'
+    };
+  } else if (item.id === 'F9' && alertsStore.unreadCount > 0) {
+    badge = {
+      label: String(alertsStore.unreadCount),
+      color: 'error',
+      variant: 'soft',
+      size: 'xs'
+    };
   }
 
   return {
     label: item.label,
     icon: item.icon,
     to: target,
-    badge: {
-      label: 'Soon',
-      color: 'primary',
-      variant: 'subtle',
-      size: 'xs'
-    }
+    ...(badge ? { badge } : {})
   };
 }
 
@@ -144,11 +163,11 @@ const navGroups = computed(() => [
   ],
   [
     { type: 'label', label: 'Garden Ops' },
-    ...DASHBOARD_NAV_SECTIONS.ops.map(mapSoonItem)
+    ...DASHBOARD_NAV_SECTIONS.ops.map(mapNavItem)
   ],
   [
     { type: 'label', label: 'Insights' },
-    ...DASHBOARD_NAV_SECTIONS.insights.map(mapSoonItem)
+    ...DASHBOARD_NAV_SECTIONS.insights.map(mapNavItem)
   ]
 ]);
 
@@ -217,8 +236,24 @@ async function checkApiHealth() {
   }
 }
 
+async function preloadWorkspaceState() {
+  try {
+    const gardens = gardensStore.gardens.length
+      ? gardensStore.gardens
+      : await gardensStore.fetchGardens();
+    const targetId = gardensStore.activeGarden?.id || gardens?.[0]?.id;
+    if (targetId && alertsStore.activeGardenId === null) {
+      alertsStore.setActiveGarden(targetId);
+      await alertsStore.fetchGardenAlerts(targetId).catch(() => {});
+    }
+  } catch {
+    // ignore preload failures when offline
+  }
+}
+
 onMounted(() => {
   checkApiHealth();
+  preloadWorkspaceState();
   healthIntervalId = setInterval(checkApiHealth, 30000);
 });
 

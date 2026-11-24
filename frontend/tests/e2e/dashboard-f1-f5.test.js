@@ -29,21 +29,68 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
       assert.ok(bodyLower.includes(label.toLowerCase()), `Overview missing stat card "${label}"`);
     }
 
-    // Click preview widgets -> open ComingSoonModal
-    for (const widgetTitle of ['Live Sensor Readings', "Today's Care Tasks", 'Weather Forecast', 'Recent Alerts']) {
+    // Verify Sprint 2 live operational widgets + click Sprint 3 Weather Forecast ComingSoonModal
+    const needsSwitch = await page.eval(() =>
+      Array.from(document.querySelectorAll('button[role="combobox"]')).some((b) =>
+        (b.innerText || '').includes('Urban Balcony & Indoor Studio')
+      )
+    );
+    if (needsSwitch) {
       await page.clickElementFromFn(
-        (title) => {
-          const cards = Array.from(document.querySelectorAll('div'));
-          return cards.find((el) => el.className.includes('cursor-pointer') && (el.innerText || '').includes(title)) || null;
-        },
-        `Preview widget "${widgetTitle}" not found`,
-        widgetTitle
+        () =>
+          Array.from(document.querySelectorAll('button[role="combobox"]')).find((b) =>
+            (b.innerText || '').includes('Urban Balcony & Indoor Studio')
+          ) || null,
+        'Live Garden Operations select not found'
       );
-      await page.waitForText('Planned Capabilities');
-      await page.sleep(250);
-      await page.clickButton('Close', { within: '[role="dialog"]' });
-      await page.waitForTextGone('Planned Capabilities');
+      await page.clickElementFromFn(
+        () =>
+          Array.from(document.querySelectorAll('[role="option"]')).find((o) =>
+            (o.innerText || '').includes('Sunny Backyard Oasis')
+          ) || null,
+        'Sunny Backyard Oasis option not found'
+      );
     }
+
+    await page.waitFor(
+      () => {
+        const badge = document.querySelector('[data-testid="realtime-status-badge"]');
+        const sensors = document.querySelector('[data-testid="overview-live-sensors"]')?.innerText || '';
+        return badge && (badge.innerText || '').includes('Live') && sensors.includes('South Raised Bed');
+      },
+      { message: 'Expected Overview realtime badge and South Raised Bed live sensors' }
+    );
+    const liveSensorsText = await page.eval(
+      () => document.querySelector('[data-testid="overview-live-sensors"]')?.innerText || ''
+    );
+    assert.ok(liveSensorsText.includes('Live Sensor Readings'), 'Missing Live Sensor Readings card');
+    assert.ok(liveSensorsText.includes('South Raised Bed'), 'Missing South Raised Bed telemetry');
+
+    const liveTasksText = await page.eval(
+      () => document.querySelector('[data-testid="overview-live-tasks"]')?.innerText || ''
+    );
+    assert.ok(liveTasksText.includes('Active Care Tasks'), 'Missing Active Care Tasks card');
+    assert.ok(liveTasksText.includes('Deep water cherry tomatoes'), 'Missing seeded care task');
+
+    const liveAlertsText = await page.eval(
+      () => document.querySelector('[data-testid="overview-live-alerts"]')?.innerText || ''
+    );
+    assert.ok(liveAlertsText.includes('Recent Alerts'), 'Missing Recent Alerts card');
+    assert.ok(liveAlertsText.includes('Soil moisture dropped below 35%'), 'Missing seeded alert');
+
+    await page.clickElementFromFn(
+      (title) => {
+        const cards = Array.from(document.querySelectorAll('div'));
+        return cards.find((el) => el.className.includes('cursor-pointer') && (el.innerText || '').includes(title)) || null;
+      },
+      'Preview widget "Weather Forecast" not found',
+      'Weather Forecast'
+    );
+    await page.waitForText('Planned Capabilities');
+    await page.waitForText('Coming in Sprint 3');
+    await page.sleep(250);
+    await page.clickButton('Close', { within: '[role="dialog"]' });
+    await page.waitForTextGone('Planned Capabilities');
 
     assertCleanRuntime(page);
   });
@@ -109,7 +156,7 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
     assertCleanRuntime(page);
   });
 
-  it('Garden Detail (/dashboard/gardens/1) supports UTabs (Zones, Members, Invitations, Devices [Soon], Activity [Soon]) and Collaborator Invitations', async () => {
+  it('Garden Detail (/dashboard/gardens/1) supports UTabs (Zones, Members, Invitations, Devices [Live], Activity [Soon]) and Collaborator Invitations', async () => {
     page.clearDiagnostics();
     const collabEmail = `e2e-collab-${Date.now()}@smartgarden.test`;
     const revokeEmail = `e2e-revoke-${Date.now()}@smartgarden.test`;
@@ -129,14 +176,11 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
       await page.waitForText('Sunny Backyard Oasis');
       await page.waitForText('Microclimate Growing Zones');
 
-      // Devices & Activity Coming Soon tabs
+      // Devices (Live F7/F8) & Activity Coming Soon tabs
       await page.clickButton('Devices');
-      await page.waitForText('Connected IoT Sensors & Irrigation Valves');
-      await page.clickButton('Preview Sensor Roadmap');
-      await page.waitForText('Planned Capabilities');
-      await page.sleep(250);
-      await page.clickButton('Close', { within: '[role="dialog"]' });
-      await page.waitForTextGone('Planned Capabilities');
+      await page.waitForText('Connected IoT Sensors & Zone Telemetry (F7/F8)');
+      await page.waitForText('South Bed Moisture & Lux Node');
+      await page.waitForText('Open Sensors Console');
 
       await page.clickButton('Activity');
       await page.waitForText('Garden Activity Feed & Field Journal');
@@ -296,7 +340,7 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
     assertCleanRuntime(page);
   });
 
-  it('Zone Plants (/dashboard/zones/:zoneId/plants) renders breadcrumb, utilization UProgress, companion analysis, add/edit/remove plant, overcrowding warning, and Coming Soon cards', async () => {
+  it('Zone Plants (/dashboard/zones/:zoneId/plants) renders breadcrumb, utilization UProgress, companion analysis, add/edit/remove plant, overcrowding warning, and Care Tasks & Live Telemetry tabs', async () => {
     page.clearDiagnostics();
     await page.goto(`${session.baseUrl}/dashboard/gardens/1`);
     await page.waitForText('South Raised Bed');
@@ -355,22 +399,16 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
     await page.waitForTextGone('E2E Nantes Carrot');
     await page.waitForTextGone('ZONE_OVERCROWDED');
 
-    // Care Schedule & Sensor Readings Coming Soon cards
-    await page.clickElementFromFn(
-      () => Array.from(document.querySelectorAll('div')).find((el) => el.className.includes('cursor-pointer') && (el.innerText || '').includes('Zone Care Schedule')) || null,
-      'Zone Care Schedule card not found'
-    );
-    await page.waitForText('Planned Capabilities');
-    await page.clickButton('Close', { within: '[role="dialog"]' });
-    await page.waitForTextGone('Planned Capabilities');
+    // Care Tasks & Live Telemetry tabs (F6/F7)
+    await page.clickButton('Care Tasks', { within: '[role="tablist"]' });
+    await page.waitForText('Zone Care Tasks (F6)');
+    await page.waitForText('Deep water cherry tomatoes and basil border');
 
-    await page.clickElementFromFn(
-      () => Array.from(document.querySelectorAll('div')).find((el) => el.className.includes('cursor-pointer') && (el.innerText || '').includes('Zone Sensor Readings')) || null,
-      'Zone Sensor Readings card not found'
-    );
-    await page.waitForText('Planned Capabilities');
-    await page.clickButton('Close', { within: '[role="dialog"]' });
-    await page.waitForTextGone('Planned Capabilities');
+    await page.clickButton('Live Telemetry', { within: '[role="tablist"]' });
+    await page.waitForText('Zone Telemetry Chart (24h)');
+    await page.waitForText('Soil Moisture');
+    const hasChart = await page.eval(() => Boolean(document.querySelector('[data-testid="telemetry-chart"] svg')));
+    assert.ok(hasChart, 'Expected TelemetryChart SVG in ZonePlantsView Live Telemetry tab');
 
     assertCleanRuntime(page);
   });
@@ -410,6 +448,7 @@ describe('E2E: Dashboard F1-F5 Live Flows (Overview, Gardens, Zones, Members, Zo
     await page.waitForText('Watering Cadence');
     await page.clickButton('Add to zone', { within: '[role="dialog"]' });
     await page.waitForText('Choose a garden and microclimate zone');
+    await page.selectByLabel('Garden', 'Sunny Backyard Oasis', { within: '[role="dialog"]' });
     await page.waitForText('Sunny Backyard Oasis');
     await page.clickButton('Cancel', { within: '[role="dialog"]' });
     await page.waitForTextGone('Choose a garden and microclimate zone');

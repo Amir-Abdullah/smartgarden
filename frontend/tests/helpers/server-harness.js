@@ -1,4 +1,5 @@
 import http from 'node:http';
+import net from 'node:net';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,6 +32,9 @@ const MIME_TYPES = {
 };
 
 function proxyToBackend(req, res, backendPort) {
+  req.setTimeout?.(0);
+  res.setTimeout?.(0);
+
   const proxyReq = http.request(
     {
       hostname: '127.0.0.1',
@@ -48,18 +52,87 @@ function proxyToBackend(req, res, backendPort) {
     }
   );
 
+  proxyReq.setTimeout(0);
+
+  const abortUpstream = () => {
+    if (!proxyReq.destroyed) {
+      proxyReq.destroy();
+    }
+  };
+  req.on('aborted', abortUpstream);
+  res.on('close', abortUpstream);
+
   proxyReq.on('error', (err) => {
     if (!res.headersSent) {
       res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: { message: err.message } }));
+    } else if (!res.writableEnded) {
+      res.end();
     }
-    res.end(JSON.stringify({ success: false, error: { message: err.message } }));
   });
 
   req.pipe(proxyReq, { end: true });
 }
 
-function createFrontendProxyServer(backendPort) {
-  return http.createServer((req, res) => {
+function proxyWsUpgrade(req, clientSocket, head, backendPort, wsSockets) {
+  const rawUrl = req.url || '/';
+  const urlPath = rawUrl.split('?')[0];
+  if (!(urlPath.startsWith('/ws') || urlPath.startsWith('/api/ws'))) {
+    clientSocket.write('HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n');
+    clientSocket.destroy();
+    return;
+  }
+
+  const backendSocket = net.connect({ host: '127.0.0.1', port: backendPort });
+  wsSockets.add(clientSocket);
+  wsSockets.add(backendSocket);
+
+  const cleanup = () => {
+    wsSockets.delete(clientSocket);
+    wsSockets.delete(backendSocket);
+    if (!clientSocket.destroyed) clientSocket.destroy();
+    if (!backendSocket.destroyed) backendSocket.destroy();
+  };
+
+  clientSocket.on('error', cleanup);
+  backendSocket.on('error', cleanup);
+  clientSocket.on('close', cleanup);
+  backendSocket.on('close', cleanup);
+
+  backendSocket.on('connect', () => {
+    clientSocket.setNoDelay(true);
+    backendSocket.setNoDelay(true);
+
+    const rawHeaders = req.rawHeaders || [];
+    const headerLines = [];
+    let hasHost = false;
+    for (let i = 0; i < rawHeaders.length; i += 2) {
+      const name = rawHeaders[i];
+      const val = rawHeaders[i + 1];
+      if (String(name).toLowerCase() === 'host') {
+        headerLines.push(`${name}: 127.0.0.1:${backendPort}`);
+        hasHost = true;
+      } else {
+        headerLines.push(`${name}: ${val}`);
+      }
+    }
+    if (!hasHost) {
+      headerLines.push(`Host: 127.0.0.1:${backendPort}`);
+    }
+
+    const reqHead = `${req.method || 'GET'} ${rawUrl} HTTP/${req.httpVersion || '1.1'}\r\n${headerLines.join('\r\n')}\r\n\r\n`;
+    backendSocket.write(reqHead);
+    if (head && head.length > 0) {
+      backendSocket.write(head);
+    }
+
+    backendSocket.pipe(clientSocket);
+    clientSocket.pipe(backendSocket);
+  });
+}
+
+function createFrontendProxyServer(backendPort, wsSockets) {
+  const server = http.createServer((req, res) => {
     const rawUrl = req.url || '/';
     const urlPath = rawUrl.split('?')[0];
 
@@ -85,6 +158,12 @@ function createFrontendProxyServer(backendPort) {
     res.writeHead(200, { 'Content-Type': contentType });
     fs.createReadStream(filePath).pipe(res);
   });
+
+  server.on('upgrade', (req, socket, head) => {
+    proxyWsUpgrade(req, socket, head, backendPort, wsSockets);
+  });
+
+  return server;
 }
 
 export async function startE2EEnvironment() {
@@ -92,11 +171,25 @@ export async function startE2EEnvironment() {
     execSync('npm run build', { cwd: FRONTEND_DIR, stdio: 'inherit' });
   }
 
+  // Capture caller overrides before loading backend/.env
+  const callerDialect = process.env.DB_DIALECT;
+  const callerStorage = process.env.DB_STORAGE;
+  const callerCronSecret = process.env.CRON_SECRET;
+
   // Load backend env before loading backend config/models
   const dotenv = requireFromBackend('dotenv');
   dotenv.config({ path: path.join(BACKEND_DIR, '.env') });
   process.env.NODE_ENV = 'test';
-  process.env.DB_DIALECT = process.env.DB_DIALECT || 'mariadb';
+  process.env.ENABLE_SCHEDULER = process.env.ENABLE_SCHEDULER || 'false';
+  process.env.CRON_SECRET =
+    callerCronSecret || process.env.CRON_SECRET || 'e2e_cron_secret_at_least_32_characters_long';
+
+  if (process.env.SG_E2E_USE_ENV_DB !== 'true') {
+    process.env.DB_DIALECT = callerDialect || 'sqlite';
+    if (process.env.DB_DIALECT === 'sqlite') {
+      process.env.DB_STORAGE = callerStorage || ':memory:';
+    }
+  }
 
   const dbConfig = requireFromBackend('./config/database.js');
   await dbConfig.connectDb();
@@ -109,7 +202,8 @@ export async function startE2EEnvironment() {
   const listenAddress = await app.listen({ port: 0, host: '127.0.0.1' });
   const backendPort = Number(new URL(listenAddress).port);
 
-  const frontendServer = createFrontendProxyServer(backendPort);
+  const wsSockets = new Set();
+  const frontendServer = createFrontendProxyServer(backendPort, wsSockets);
   await new Promise((resolve) => frontendServer.listen(0, '127.0.0.1', resolve));
   const frontendAddress = frontendServer.address();
   const frontendPort = typeof frontendAddress === 'object' && frontendAddress ? frontendAddress.port : 5173;
@@ -120,7 +214,37 @@ export async function startE2EEnvironment() {
   async function cleanupE2EData() {
     const models = requireFromBackend('./models');
     const { Op } = requireFromBackend('sequelize');
-    const { User, PasswordResetToken, Garden, GardenMember, GardenInvitation, Zone, ZonePlant } = models;
+    const {
+      User,
+      PasswordResetToken,
+      Garden,
+      GardenMember,
+      GardenInvitation,
+      Zone,
+      ZonePlant,
+      Device,
+      SensorReading,
+      SensorAggregateDaily,
+      CareTask,
+      WaterUsageLog,
+      AutomationRule,
+      AlertConfig,
+      AlertLog,
+      DeviceWatchdogAlert
+    } = models;
+
+    async function destroyZoneChildren(zoneId) {
+      await WaterUsageLog.destroy({ where: { zone_id: zoneId } });
+      await CareTask.destroy({ where: { zone_id: zoneId } });
+      await DeviceWatchdogAlert.destroy({ where: { zone_id: zoneId } });
+      await SensorReading.destroy({ where: { zone_id: zoneId } });
+      await SensorAggregateDaily.destroy({ where: { zone_id: zoneId } });
+      await Device.destroy({ where: { zone_id: zoneId } });
+      await AlertLog.destroy({ where: { zone_id: zoneId } });
+      await AlertConfig.destroy({ where: { zone_id: zoneId } });
+      await AutomationRule.destroy({ where: { zone_id: zoneId } });
+      await ZonePlant.destroy({ where: { zone_id: zoneId } });
+    }
 
     const testUsers = await User.findAll({
       where: {
@@ -135,13 +259,17 @@ export async function startE2EEnvironment() {
       for (const g of ownedGardens) {
         const zones = await Zone.findAll({ where: { garden_id: g.id } });
         for (const z of zones) {
-          await ZonePlant.destroy({ where: { zone_id: z.id } });
+          await destroyZoneChildren(z.id);
         }
+        await DeviceWatchdogAlert.destroy({ where: { garden_id: g.id } });
         await Zone.destroy({ where: { garden_id: g.id } });
         await GardenInvitation.destroy({ where: { garden_id: g.id } });
         await GardenMember.destroy({ where: { garden_id: g.id } });
         await Garden.destroy({ where: { id: g.id } });
       }
+      await WaterUsageLog.destroy({ where: { logged_by_user_id: u.id } });
+      await CareTask.destroy({ where: { assigned_to: u.id } });
+      await GardenInvitation.destroy({ where: { invited_by: u.id } });
       await GardenMember.destroy({ where: { user_id: u.id } });
       await PasswordResetToken.destroy({ where: { user_id: u.id } });
       await User.destroy({ where: { id: u.id } });
@@ -159,8 +287,9 @@ export async function startE2EEnvironment() {
       for (const g of e2eGardens) {
         const zones = await Zone.findAll({ where: { garden_id: g.id } });
         for (const z of zones) {
-          await ZonePlant.destroy({ where: { zone_id: z.id } });
+          await destroyZoneChildren(z.id);
         }
+        await DeviceWatchdogAlert.destroy({ where: { garden_id: g.id } });
         await Zone.destroy({ where: { garden_id: g.id } });
         await GardenInvitation.destroy({ where: { garden_id: g.id } });
         await GardenMember.destroy({ where: { garden_id: g.id } });
@@ -174,7 +303,7 @@ export async function startE2EEnvironment() {
       }
     });
     for (const z of e2eZones) {
-      await ZonePlant.destroy({ where: { zone_id: z.id } });
+      await destroyZoneChildren(z.id);
       await Zone.destroy({ where: { id: z.id } });
     }
 
@@ -183,10 +312,26 @@ export async function startE2EEnvironment() {
         custom_nickname: { [Op.like]: 'E2E %' }
       }
     });
+
+    // Clean any E2E Sprint 2 records left on seeded zones
+    await WaterUsageLog.destroy({ where: { notes: { [Op.like]: 'E2E %' } } });
+    await CareTask.destroy({ where: { notes: { [Op.like]: 'E2E %' } } });
+    await AutomationRule.destroy({ where: { name: { [Op.like]: 'E2E %' } } });
+    const e2eDevices = await Device.findAll({ where: { device_name: { [Op.like]: 'E2E %' } } });
+    for (const d of e2eDevices) {
+      await DeviceWatchdogAlert.destroy({ where: { device_id: d.id } });
+      await SensorReading.destroy({ where: { device_id: d.id } });
+      await SensorAggregateDaily.destroy({ where: { device_id: d.id } });
+      await Device.destroy({ where: { id: d.id } });
+    }
   }
 
   async function stop() {
     await cleanupE2EData().catch(() => {});
+    for (const sock of wsSockets) {
+      if (!sock.destroyed) sock.destroy();
+    }
+    wsSockets.clear();
     if (typeof frontendServer.closeAllConnections === 'function') {
       frontendServer.closeAllConnections();
     }

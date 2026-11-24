@@ -1,4 +1,4 @@
-const { Zone, ZonePlant, PlantCatalog } = require('../models');
+const { Zone, ZonePlant, PlantCatalog, Device } = require('../models');
 const { verifyJwt } = require('../middleware/auth');
 const { resolveGardenAndRole } = require('../middleware/rbac');
 const { calculateZoneCapacity, enrichZonePlant } = require('./plants');
@@ -39,12 +39,18 @@ async function zoneRoutes(fastify, options) {
     const plants = rawPlants.map(zp => enrichZonePlant(zp));
     const zoneUtilization = calculateZoneCapacity(zone.area_sq_m, rawPlants);
 
+    const rawDevices = await Device.findAll({
+      where: { zone_id: zone.id, is_active: true },
+      order: [['id', 'ASC']]
+    });
+    const activeDevices = rawDevices.map((d) => (d.toJSON ? d.toJSON() : d));
+
     return reply.send({
       success: true,
       data: {
         zone: normalizeZoneJson(zone, { plant_count: plants.length }),
         plants,
-        active_devices: [],
+        active_devices: activeDevices,
         zone_utilization: zoneUtilization
       }
     });

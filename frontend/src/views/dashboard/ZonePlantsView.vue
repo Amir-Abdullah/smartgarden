@@ -7,6 +7,7 @@
           <UBreadcrumb :items="breadcrumbItems" class="hidden sm:flex" />
         </template>
         <template #right>
+          <AlertBellButton />
           <UColorModeButton />
           <UButton
             v-if="canEditPlants"
@@ -111,8 +112,12 @@
           </div>
         </UCard>
 
-        <!-- Companion Analysis Cards -->
-        <div v-if="companions" class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <!-- Zone Tabs: Plants (default), Care Tasks (F6), Live Telemetry (F7) -->
+        <UTabs v-model="activeTab" :items="zoneTabs" variant="link" class="w-full">
+          <template #plants>
+            <div class="space-y-6 pt-4">
+              <!-- Companion Analysis Cards -->
+              <div v-if="companions" class="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <UCard>
             <div class="flex items-center justify-between gap-3">
               <div>
@@ -292,68 +297,263 @@
                   aria-label="Edit plant"
                   @click="openEditPlantModal(row.original)"
                 />
-                <UButton
-                  size="xs"
-                  color="error"
-                  variant="ghost"
-                  icon="i-lucide-trash-2"
-                  aria-label="Remove plant"
-                  @click="confirmRemovePlant(row.original)"
+                  <UButton
+                    size="xs"
+                    color="error"
+                    variant="ghost"
+                    icon="i-lucide-trash-2"
+                    aria-label="Remove plant"
+                    @click="confirmRemovePlant(row.original)"
+                  />
+                </div>
+              </template>
+            </UTable>
+          </UCard>
+            </div>
+          </template>
+
+          <!-- TAB 2: ZONE CARE TASKS (F6) -->
+          <template #tasks>
+            <div class="space-y-4 pt-4">
+              <UCard>
+                <template #header>
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h3 class="text-base font-semibold text-zinc-900 dark:text-white">
+                        Zone Care Tasks (F6)
+                      </h3>
+                      <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                        Recurring watering, fertilizing, and maintenance schedules for {{ zone?.name || 'this zone' }}
+                      </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <UButton
+                        v-for="f in taskFilterOptions"
+                        :key="f.value"
+                        size="xs"
+                        :color="taskFilter === f.value ? 'primary' : 'neutral'"
+                        :variant="taskFilter === f.value ? 'solid' : 'outline'"
+                        @click="taskFilter = f.value"
+                      >
+                        {{ f.label }}
+                      </UButton>
+                      <UButton
+                        v-if="canEditPlants"
+                        data-testid="create-task-btn"
+                        size="xs"
+                        color="primary"
+                        icon="i-lucide-plus"
+                        @click="openZoneTaskModal"
+                      >
+                        New Task
+                      </UButton>
+                    </div>
+                  </div>
+                </template>
+
+                <UEmpty
+                  v-if="filteredZoneTasks.length === 0"
+                  icon="i-lucide-check-square"
+                  title="No tasks in this view"
+                  description="Schedule a recurring watering or fertilizing task for this zone."
+                  :actions="
+                    canEditPlants
+                      ? [{ label: 'Create Task', color: 'primary', icon: 'i-lucide-plus', onClick: openZoneTaskModal }]
+                      : []
+                  "
                 />
-              </div>
-            </template>
-          </UTable>
-        </UCard>
 
-        <!-- Coming Soon Widgets: Care Schedule (F6) & Sensor Readings (F7) -->
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <UCard
-            class="cursor-pointer transition-colors hover:border-emerald-400 dark:hover:border-emerald-700"
-            @click="open('F6')"
-          >
-            <template #header>
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-check-square" class="size-4 text-emerald-600 dark:text-emerald-400" />
-                  <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">
-                    Zone Care Schedule
-                  </h3>
-                </div>
-                <UBadge color="primary" variant="subtle" size="xs" icon="i-lucide-clock">
-                  Coming in Sprint 2
-                </UBadge>
-              </div>
-            </template>
-            <p class="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
-              Automated watering, fertilizing, and pruning schedules tailored to the species assigned to {{ zone?.name || 'this zone' }}.
-            </p>
-          </UCard>
+                <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                  <div
+                    v-for="task in filteredZoneTasks"
+                    :key="task.id"
+                    data-testid="task-row"
+                    class="flex flex-col justify-between gap-3 py-3 sm:flex-row sm:items-center"
+                  >
+                    <div class="space-y-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <UBadge color="info" variant="soft" size="xs">{{ task.task_type }}</UBadge>
+                        <UBadge v-if="task.recurrence_days" color="neutral" variant="subtle" size="xs">
+                          Every {{ task.recurrence_days }}d
+                        </UBadge>
+                        <UBadge v-if="task.is_completed" color="success" variant="soft" size="xs">Completed</UBadge>
+                        <span class="text-xs text-zinc-500 dark:text-zinc-400">Due: {{ task.due_date }}</span>
+                      </div>
+                      <p class="text-sm text-zinc-800 dark:text-zinc-200">
+                        {{ task.notes || `${formatEnum(task.task_type)} task` }}
+                      </p>
+                    </div>
 
-          <UCard
-            class="cursor-pointer transition-colors hover:border-emerald-400 dark:hover:border-emerald-700"
-            @click="open('F7')"
-          >
-            <template #header>
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-activity" class="size-4 text-emerald-600 dark:text-emerald-400" />
-                  <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">
-                    Zone Sensor Readings
-                  </h3>
+                    <div v-if="canEditPlants" class="flex items-center gap-2">
+                      <UButton
+                        v-if="!task.is_completed"
+                        data-testid="complete-task-btn"
+                        size="xs"
+                        color="success"
+                        variant="soft"
+                        icon="i-lucide-check"
+                        :loading="tasksStore.actionLoading"
+                        @click="handleZoneCompleteClick(task)"
+                      >
+                        Complete
+                      </UButton>
+                      <UButton
+                        size="xs"
+                        color="error"
+                        variant="ghost"
+                        icon="i-lucide-trash-2"
+                        aria-label="Delete task"
+                        @click="handleDeleteZoneTask(task)"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <UBadge color="primary" variant="subtle" size="xs" icon="i-lucide-clock">
-                  Coming in Sprint 2
-                </UBadge>
+              </UCard>
+            </div>
+          </template>
+
+          <!-- TAB 3: ZONE SENSORS & TELEMETRY (F7) -->
+          <template #sensors>
+            <div class="space-y-4 pt-4">
+              <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <UCard>
+                  <p class="text-xs text-zinc-500 uppercase">Moisture</p>
+                  <p class="mt-1 text-xl font-bold text-zinc-900 dark:text-white">
+                    {{ zoneLatestReading?.soil_moisture !== undefined && zoneLatestReading?.soil_moisture !== null ? `${Number(zoneLatestReading.soil_moisture).toFixed(1)}%` : '—' }}
+                  </p>
+                </UCard>
+                <UCard>
+                  <p class="text-xs text-zinc-500 uppercase">Temperature</p>
+                  <p class="mt-1 text-xl font-bold text-zinc-900 dark:text-white">
+                    {{ zoneLatestReading?.temperature !== undefined && zoneLatestReading?.temperature !== null ? `${Number(zoneLatestReading.temperature).toFixed(1)}°C` : '—' }}
+                  </p>
+                </UCard>
+                <UCard>
+                  <p class="text-xs text-zinc-500 uppercase">Humidity</p>
+                  <p class="mt-1 text-xl font-bold text-zinc-900 dark:text-white">
+                    {{ zoneLatestReading?.humidity !== undefined && zoneLatestReading?.humidity !== null ? `${Number(zoneLatestReading.humidity).toFixed(1)}%` : '—' }}
+                  </p>
+                </UCard>
+                <UCard>
+                  <p class="text-xs text-zinc-500 uppercase">Light Lux</p>
+                  <p class="mt-1 text-xl font-bold text-zinc-900 dark:text-white">
+                    {{ zoneLatestReading?.light_lux !== undefined && zoneLatestReading?.light_lux !== null ? `${Number(zoneLatestReading.light_lux).toLocaleString()} lx` : '—' }}
+                  </p>
+                </UCard>
               </div>
-            </template>
-            <p class="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
-              Live soil moisture, temperature, humidity, and PAR light streams calibrated to {{ formatEnum(zone?.soil_type) }} beds.
-            </p>
-          </UCard>
-        </div>
+
+              <UCard>
+                <template #header>
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h3 class="text-base font-semibold text-zinc-900 dark:text-white">
+                        Zone Telemetry Chart (24h)
+                      </h3>
+                      <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                        {{ zoneDevices.length }} paired sensor device{{ zoneDevices.length === 1 ? '' : 's' }}
+                      </p>
+                    </div>
+                    <UButton
+                      :to="`/dashboard/sensors?gardenId=${zone?.garden_id || ''}&zoneId=${zone?.id || ''}`"
+                      size="xs"
+                      color="primary"
+                      variant="soft"
+                      trailing-icon="i-lucide-arrow-right"
+                    >
+                      Open Sensors Console
+                    </UButton>
+                  </div>
+                </template>
+
+                <TelemetryChart :readings="zoneReadings" />
+              </UCard>
+            </div>
+          </template>
+        </UTabs>
       </div>
     </template>
   </UDashboardPanel>
+
+  <!-- Create Zone Task Modal -->
+  <UModal
+    v-model:open="isTaskModalOpen"
+    title="Create Zone Care Task"
+    description="Schedule a care task for this growing zone."
+  >
+    <template #body>
+      <form id="zone-create-task-form" class="space-y-4" @submit.prevent="handleCreateZoneTask">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <UFormField label="Task Type">
+            <USelect
+              v-model="zoneTaskForm.task_type"
+              :items="taskTypeOptions"
+              value-key="value"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="Due Date" required>
+            <UInput v-model="zoneTaskForm.due_date" type="date" required class="w-full" />
+          </UFormField>
+        </div>
+
+        <UFormField label="Recurrence (Days)">
+          <UInput v-model.number="zoneTaskForm.recurrence_days" type="number" min="1" placeholder="Optional" class="w-full" />
+        </UFormField>
+
+        <UFormField label="Notes">
+          <UTextarea v-model="zoneTaskForm.notes" :rows="2" class="w-full" />
+        </UFormField>
+      </form>
+    </template>
+    <template #footer>
+      <div class="flex w-full items-center justify-end gap-2">
+        <UButton color="neutral" variant="outline" @click="isTaskModalOpen = false">Cancel</UButton>
+        <UButton type="submit" form="zone-create-task-form" color="primary" :loading="tasksStore.actionLoading">
+          Create Task
+        </UButton>
+      </div>
+    </template>
+  </UModal>
+
+  <!-- Complete Zone Water Task Modal -->
+  <UModal
+    v-model:open="isCompleteTaskModalOpen"
+    title="Complete Watering Task"
+    description="Optionally log water volume applied in liters."
+  >
+    <template #body>
+      <form id="zone-complete-task-form" class="space-y-4" @submit.prevent="submitCompleteZoneWaterTask">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <UFormField label="Water Volume (Liters)">
+            <UInput
+              v-model.number="zoneCompleteForm.water_volume_liters"
+              data-testid="water-volume-input"
+              type="number"
+              min="0"
+              step="0.1"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="Irrigation Method">
+            <USelect
+              v-model="zoneCompleteForm.irrigation_method"
+              :items="irrigationMethodOptions"
+              value-key="value"
+              class="w-full"
+            />
+          </UFormField>
+        </div>
+      </form>
+    </template>
+    <template #footer>
+      <div class="flex w-full items-center justify-end gap-2">
+        <UButton color="neutral" variant="outline" @click="isCompleteTaskModalOpen = false">Cancel</UButton>
+        <UButton type="submit" form="zone-complete-task-form" color="success" :loading="tasksStore.actionLoading">
+          Complete Task
+        </UButton>
+      </div>
+    </template>
+  </UModal>
 
   <!-- Add / Edit Plant Modal -->
   <UModal
@@ -491,14 +691,34 @@ import { useToast } from '@nuxt/ui/composables';
 import { useGardensStore } from '../../stores/gardens.js';
 import { useCatalogStore } from '../../stores/catalog.js';
 import { useAuthStore } from '../../stores/auth.js';
-import { useComingSoon } from '../../composables/useComingSoon.js';
+import { useTasksStore } from '../../stores/tasks.js';
+import { useSensorsStore } from '../../stores/sensors.js';
+import AlertBellButton from '../../components/AlertBellButton.vue';
+import TelemetryChart from '../../components/charts/TelemetryChart.vue';
 
 const route = useRoute();
 const toast = useToast();
 const gardensStore = useGardensStore();
 const catalogStore = useCatalogStore();
 const authStore = useAuthStore();
-const { open } = useComingSoon();
+const tasksStore = useTasksStore();
+const sensorsStore = useSensorsStore();
+
+const activeTab = ref('plants');
+const taskFilter = ref('open');
+const isTaskModalOpen = ref(false);
+const zoneTaskForm = reactive({
+  task_type: 'WATER',
+  due_date: new Date().toISOString().slice(0, 10),
+  recurrence_days: '',
+  notes: ''
+});
+const isCompleteTaskModalOpen = ref(false);
+const completingZoneTask = ref(null);
+const zoneCompleteForm = reactive({
+  water_volume_liters: 5,
+  irrigation_method: 'MANUAL_HOSE'
+});
 
 const isPlantModalOpen = ref(false);
 const editingPlantId = ref(null);
@@ -538,6 +758,81 @@ const healthStatusOptions = [
 const zone = computed(() => gardensStore.activeZone);
 const utilization = computed(() => gardensStore.zoneUtilization);
 const companions = computed(() => gardensStore.companionAnalysis);
+
+const zoneTasks = computed(() => {
+  const zid = Number(route.params.zoneId);
+  return zid ? tasksStore.tasksByZone[zid] || [] : [];
+});
+
+const filteredZoneTasks = computed(() =>
+  zoneTasks.value.filter((t) => {
+    if (taskFilter.value === 'open') return !t.is_completed;
+    if (taskFilter.value === 'completed') return Boolean(t.is_completed);
+    return true;
+  })
+);
+
+const zoneReadings = computed(() => {
+  const zid = Number(route.params.zoneId);
+  return zid ? sensorsStore.readingsByZone[zid] || [] : [];
+});
+
+const zoneDevices = computed(() => {
+  const zid = Number(route.params.zoneId);
+  return zid ? sensorsStore.devicesByZone[zid] || [] : [];
+});
+
+const zoneLatestReading = computed(() => {
+  const zid = Number(route.params.zoneId);
+  return zid ? sensorsStore.latestByZone[zid] || zoneReadings.value[0] || null : null;
+});
+
+const zoneTabs = computed(() => [
+  {
+    label: 'Crop Inventory',
+    value: 'plants',
+    slot: 'plants',
+    icon: 'i-lucide-sprout',
+    badge: String(gardensStore.zonePlants.length)
+  },
+  {
+    label: 'Care Tasks',
+    value: 'tasks',
+    slot: 'tasks',
+    icon: 'i-lucide-check-square',
+    badge: String(zoneTasks.value.filter((t) => !t.is_completed).length)
+  },
+  {
+    label: 'Live Telemetry',
+    value: 'sensors',
+    slot: 'sensors',
+    icon: 'i-lucide-activity',
+    badge: zoneDevices.value.length > 0 ? String(zoneDevices.value.length) : undefined
+  }
+]);
+
+const taskFilterOptions = [
+  { label: 'Open', value: 'open' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'All', value: 'all' }
+];
+
+const taskTypeOptions = [
+  { label: 'WATER', value: 'WATER' },
+  { label: 'FERTILIZE', value: 'FERTILIZE' },
+  { label: 'PRUNE', value: 'PRUNE' },
+  { label: 'REPOT', value: 'REPOT' },
+  { label: 'HARVEST', value: 'HARVEST' },
+  { label: 'PEST_INSPECTION', value: 'PEST_INSPECTION' }
+];
+
+const irrigationMethodOptions = [
+  { label: 'Manual Hose', value: 'MANUAL_HOSE' },
+  { label: 'Drip Irrigation', value: 'DRIP_IRRIGATION' },
+  { label: 'Sprinkler', value: 'SPRINKLER' },
+  { label: 'Watering Can', value: 'WATERING_CAN' },
+  { label: 'Automated Valve', value: 'AUTOMATED_VALVE' }
+];
 
 const utilizationPct = computed(() =>
   Math.round(Number(utilization.value?.utilization_ratio || 0) * 100)
@@ -631,11 +926,86 @@ async function loadZoneData(zoneId) {
   gardensStore.clearMessages();
   gardensStore.lastCapacityWarning = null;
   const detail = await gardensStore.fetchZoneDetail(zoneId).catch(() => null);
-  await gardensStore.fetchZonePlants(zoneId).catch(() => {});
+  await Promise.all([
+    gardensStore.fetchZonePlants(zoneId).catch(() => {}),
+    tasksStore.fetchZoneTasks(zoneId, {}, detail?.zone?.garden_id ?? null).catch(() => {}),
+    sensorsStore.fetchZoneDevices(zoneId).catch(() => {}),
+    sensorsStore.fetchZoneReadings(zoneId, { hours: 24, limit: 100 }).catch(() => {})
+  ]);
   if (detail?.zone?.garden_id && gardensStore.activeGarden?.id !== detail.zone.garden_id) {
     await gardensStore.fetchGardenDetail(detail.zone.garden_id).catch(() => {});
   }
   await catalogStore.fetchCatalog({ limit: 100 }).catch(() => {});
+}
+
+function openZoneTaskModal() {
+  zoneTaskForm.task_type = 'WATER';
+  zoneTaskForm.due_date = new Date().toISOString().slice(0, 10);
+  zoneTaskForm.recurrence_days = '';
+  zoneTaskForm.notes = '';
+  isTaskModalOpen.value = true;
+}
+
+async function handleCreateZoneTask() {
+  try {
+    await tasksStore.createTask(
+      route.params.zoneId,
+      {
+        task_type: zoneTaskForm.task_type,
+        due_date: zoneTaskForm.due_date,
+        recurrence_days: zoneTaskForm.recurrence_days ? Number(zoneTaskForm.recurrence_days) : null,
+        notes: zoneTaskForm.notes.trim() || undefined
+      },
+      zone.value?.garden_id
+    );
+    isTaskModalOpen.value = false;
+    toast.add({ title: 'Care task created', icon: 'i-lucide-check-circle-2', color: 'success' });
+  } catch (err) {
+    toast.add({ title: 'Failed to create task', description: tasksStore.error || err.message, color: 'error' });
+  }
+}
+
+function handleZoneCompleteClick(task) {
+  if (task.task_type === 'WATER') {
+    completingZoneTask.value = task;
+    zoneCompleteForm.water_volume_liters = 5;
+    zoneCompleteForm.irrigation_method = 'MANUAL_HOSE';
+    isCompleteTaskModalOpen.value = true;
+  } else {
+    tasksStore.updateTask(task.zone_id, task.id, { is_completed: true }, zone.value?.garden_id)
+      .then(() => toast.add({ title: 'Task completed', icon: 'i-lucide-check-circle-2', color: 'success' }))
+      .catch((err) => toast.add({ title: 'Update failed', description: tasksStore.error || err.message, color: 'error' }));
+  }
+}
+
+async function submitCompleteZoneWaterTask() {
+  if (!completingZoneTask.value) return;
+  try {
+    await tasksStore.updateTask(
+      completingZoneTask.value.zone_id,
+      completingZoneTask.value.id,
+      {
+        is_completed: true,
+        water_volume_liters: Number(zoneCompleteForm.water_volume_liters || 0),
+        irrigation_method: zoneCompleteForm.irrigation_method
+      },
+      zone.value?.garden_id
+    );
+    isCompleteTaskModalOpen.value = false;
+    completingZoneTask.value = null;
+    toast.add({ title: 'Watering task completed', icon: 'i-lucide-droplets', color: 'success' });
+  } catch (err) {
+    toast.add({ title: 'Update failed', description: tasksStore.error || err.message, color: 'error' });
+  }
+}
+
+async function handleDeleteZoneTask(task) {
+  try {
+    await tasksStore.deleteTask(task.zone_id, task.id);
+    toast.add({ title: 'Task deleted', icon: 'i-lucide-trash-2', color: 'success' });
+  } catch (err) {
+    toast.add({ title: 'Delete failed', description: tasksStore.error || err.message, color: 'error' });
+  }
 }
 
 function toDateInputValue(val) {

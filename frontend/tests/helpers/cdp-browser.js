@@ -380,7 +380,7 @@ export class CDPPage {
       args
     );
 
-    if (info.type === 'date') {
+    if (info.type === 'date' || info.type === 'time') {
       await this.eval(
         (fnSrc, fnArgs, val) => {
           const finder = eval(`(${fnSrc})`);

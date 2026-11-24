@@ -1,9 +1,12 @@
 const fastify = require('fastify');
 const cors = require('@fastify/cors');
 const jwt = require('@fastify/jwt');
+const websocket = require('@fastify/websocket');
 const config = require('./config/config');
 const dbConfig = require('./config/database');
 const { connectDb } = dbConfig;
+const scheduler = require('./jobs/scheduler');
+const emailService = require('./services/emailService');
 
 function getDatabase() {
   return typeof dbConfig.getDatabase === 'function' ? dbConfig.getDatabase() : dbConfig.sequelize;
@@ -21,13 +24,16 @@ function buildServer(opts = {}) {
     origin: corsOrigin,
     credentials: config.cors.credentials,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-Key', 'X-Cron-Secret']
   });
 
   // Register JWT
   app.register(jwt, {
     secret: config.jwt.secret
   });
+
+  // Register WebSocket support
+  app.register(websocket);
 
   // Standard Error Response Handler conforming to RFC 7807 & PROJECT.md
   app.setErrorHandler((error, request, reply) => {
@@ -102,6 +108,14 @@ function buildServer(opts = {}) {
   const zonesRoutes = require('./routes/zones');
   const catalogRoutes = require('./routes/catalog');
   const plantsRoutes = require('./routes/plants');
+  const tasksRoutes = require('./routes/tasks');
+  const devicesRoutes = require('./routes/devices');
+  const sensorsRoutes = require('./routes/sensors');
+  const alertsRoutes = require('./routes/alerts');
+  const rulesRoutes = require('./routes/rules');
+  const jobsRoutes = require('./routes/jobs');
+  const wsTransport = require('./realtime/wsTransport');
+  const sseTransport = require('./realtime/sseTransport');
 
   // Prefixed with /api
   app.register(authRoutes, { prefix: '/api/auth' });
@@ -110,6 +124,14 @@ function buildServer(opts = {}) {
   app.register(zonesRoutes, { prefix: '/api/zones' });
   app.register(catalogRoutes, { prefix: '/api/catalog' });
   app.register(plantsRoutes, { prefix: '/api/zones' });
+  app.register(tasksRoutes, { prefix: '/api' });
+  app.register(devicesRoutes, { prefix: '/api' });
+  app.register(sensorsRoutes, { prefix: '/api' });
+  app.register(alertsRoutes, { prefix: '/api' });
+  app.register(rulesRoutes, { prefix: '/api' });
+  app.register(jobsRoutes, { prefix: '/api' });
+  app.register(wsTransport, { prefix: '/api' });
+  app.register(sseTransport, { prefix: '/api' });
 
   // Direct without /api (for rewrites that strip the /api prefix)
   app.register(authRoutes, { prefix: '/auth' });
@@ -118,6 +140,19 @@ function buildServer(opts = {}) {
   app.register(zonesRoutes, { prefix: '/zones' });
   app.register(catalogRoutes, { prefix: '/catalog' });
   app.register(plantsRoutes, { prefix: '/zones' });
+  app.register(tasksRoutes);
+  app.register(devicesRoutes);
+  app.register(sensorsRoutes);
+  app.register(alertsRoutes);
+  app.register(rulesRoutes);
+  app.register(jobsRoutes);
+  app.register(wsTransport);
+  app.register(sseTransport);
+
+  app.addHook('onClose', async () => {
+    scheduler.stopScheduler();
+    emailService.closeTransporter();
+  });
 
   return app;
 }
@@ -128,6 +163,9 @@ async function start() {
     await connectDb();
     const address = await app.listen({ port: config.port, host: config.host });
     console.log(`[smartgarden-backend] Server listening at ${address}`);
+    if (config.env !== 'test' && process.env.ENABLE_SCHEDULER !== 'false') {
+      scheduler.startScheduler();
+    }
   } catch (err) {
     console.error('[smartgarden-backend] Startup error:', err);
     process.exit(1);

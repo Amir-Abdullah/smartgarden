@@ -1,0 +1,6 @@
+{
+  "name": "nodemailer",
+  "version": "6.9.16",
+  "description": "Zero-dependency pure Node.js SMTP & fallback email transport",
+  "main": "index.js"
+}

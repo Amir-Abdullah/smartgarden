@@ -7,6 +7,16 @@
           <UBreadcrumb :items="breadcrumbItems" class="hidden sm:flex" />
         </template>
         <template #right>
+          <UBadge
+            data-testid="realtime-status-badge"
+            :color="realtimeBadgeColor"
+            variant="soft"
+            size="sm"
+            :icon="realtimeBadgeIcon"
+          >
+            {{ realtimeBadgeLabel }}
+          </UBadge>
+          <AlertBellButton />
           <UColorModeButton />
           <UButton
             v-if="canManageGarden && garden"
@@ -107,7 +117,7 @@
             </div>
           </UCard>
 
-          <!-- Tabs: Zones, Members, Invitations, Devices [Soon], Activity [Soon] -->
+          <!-- Tabs: Zones, Members, Invitations, Devices, Activity [Soon] -->
           <UTabs
             v-model="activeTab"
             :items="tabItems"
@@ -200,6 +210,18 @@
                       <p v-if="zone.dimensions_description" class="text-xs text-zinc-500 dark:text-zinc-400">
                         Dimensions: {{ zone.dimensions_description }}
                       </p>
+
+                      <!-- Live Microclimate Strip -->
+                      <div
+                        v-if="latestReadingForZone(zone.id)"
+                        class="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200/70 bg-emerald-50/60 px-2.5 py-1.5 text-[11px] text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200"
+                      >
+                        <span class="font-semibold">Live:</span>
+                        <span>{{ latestReadingForZone(zone.id).soil_moisture !== null && latestReadingForZone(zone.id).soil_moisture !== undefined ? `${Number(latestReadingForZone(zone.id).soil_moisture).toFixed(1)}%` : '—' }} Moisture</span>
+                        <span>&bull; {{ latestReadingForZone(zone.id).temperature !== null && latestReadingForZone(zone.id).temperature !== undefined ? `${Number(latestReadingForZone(zone.id).temperature).toFixed(1)}°C` : '—' }}</span>
+                        <span>&bull; {{ latestReadingForZone(zone.id).humidity !== null && latestReadingForZone(zone.id).humidity !== undefined ? `${Number(latestReadingForZone(zone.id).humidity).toFixed(0)}%` : '—' }} RH</span>
+                        <span>&bull; {{ latestReadingForZone(zone.id).light_lux !== null && latestReadingForZone(zone.id).light_lux !== undefined ? `${Number(latestReadingForZone(zone.id).light_lux).toLocaleString()} lx` : '—' }}</span>
+                      </div>
                     </div>
 
                     <template #footer>
@@ -492,28 +514,85 @@
               </div>
             </template>
 
-            <!-- TAB 4: DEVICES [SOON] -->
+            <!-- TAB 4: DEVICES & TELEMETRY (F7/F8) -->
             <template #devices>
-              <div class="pt-4">
+              <div class="space-y-4 pt-4">
                 <UCard>
-                  <div class="flex flex-col items-center space-y-4 py-8 text-center">
-                    <div class="flex size-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                      <UIcon name="i-lucide-cpu" class="size-7" />
+                  <template #header>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-white">
+                          Connected IoT Sensors &amp; Zone Telemetry (F7/F8)
+                        </h3>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                          Live device roster, signal strength, and latest telemetry across all zones in this garden
+                        </p>
+                      </div>
+                      <UButton
+                        :to="`/dashboard/sensors?gardenId=${garden.id}`"
+                        size="sm"
+                        color="primary"
+                        variant="soft"
+                        trailing-icon="i-lucide-arrow-right"
+                      >
+                        Open Sensors Console
+                      </UButton>
                     </div>
-                    <div class="space-y-1.5">
-                      <UBadge color="primary" variant="subtle" size="sm" icon="i-lucide-clock">
-                        F7 &amp; F9 &bull; Coming in Sprint 2&ndash;3
-                      </UBadge>
-                      <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
-                        Connected IoT Sensors &amp; Irrigation Valves
-                      </h3>
-                      <p class="mx-auto max-w-lg text-sm text-zinc-500 dark:text-zinc-400">
-                        Pair ESP32 moisture probes, greenhouse climate nodes, and automated drip valves directly to your zones in Sprint 2.
-                      </p>
+                  </template>
+
+                  <UEmpty
+                    v-if="allGardenDevices.length === 0"
+                    icon="i-lucide-cpu"
+                    title="No sensor devices paired yet"
+                    description="Register an ESP32, SG Pro, or simulator device in the Sensors Console to stream live soil moisture and climate readings."
+                    :actions="[
+                      { label: 'Open Sensors Console', color: 'primary', icon: 'i-lucide-activity', to: `/dashboard/sensors?gardenId=${garden.id}` }
+                    ]"
+                  />
+
+                  <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    <div
+                      v-for="dev in allGardenDevices"
+                      :key="dev.id"
+                      class="flex flex-col justify-between gap-3 py-3.5 sm:flex-row sm:items-center"
+                    >
+                      <div class="space-y-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <span class="font-semibold text-zinc-900 dark:text-white">{{ dev.device_name }}</span>
+                          <UBadge
+                            :color="dev.connectivity_status === 'ONLINE' ? 'success' : dev.connectivity_status === 'STALE' ? 'warning' : dev.connectivity_status === 'REVOKED' ? 'error' : 'neutral'"
+                            variant="soft"
+                            size="xs"
+                          >
+                            {{ dev.connectivity_status || (dev.is_active ? 'OFFLINE' : 'REVOKED') }}
+                          </UBadge>
+                          <UBadge color="neutral" variant="outline" size="xs">
+                            {{ dev.zone_name }}
+                          </UBadge>
+                        </div>
+                        <p class="font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                          {{ dev.device_uid }} &bull; {{ dev.device_type }} &bull; {{ dev.firmware_version || 'v1.0.0' }}
+                        </p>
+                      </div>
+
+                      <div class="flex flex-wrap items-center gap-3 text-xs text-zinc-600 dark:text-zinc-300">
+                        <span v-if="latestReadingForZone(dev.zone_id)">
+                          {{ latestReadingForZone(dev.zone_id).soil_moisture !== null && latestReadingForZone(dev.zone_id).soil_moisture !== undefined ? `${Number(latestReadingForZone(dev.zone_id).soil_moisture).toFixed(1)}%` : '—' }} Moisture &bull;
+                          {{ latestReadingForZone(dev.zone_id).temperature !== null && latestReadingForZone(dev.zone_id).temperature !== undefined ? `${Number(latestReadingForZone(dev.zone_id).temperature).toFixed(1)}°C` : '—' }}
+                        </span>
+                        <span class="text-zinc-400">
+                          Last seen: {{ dev.last_seen_at ? formatDate(dev.last_seen_at) : 'Never' }}
+                        </span>
+                        <UButton
+                          :to="`/dashboard/sensors?gardenId=${garden.id}&zoneId=${dev.zone_id}`"
+                          size="xs"
+                          color="neutral"
+                          variant="outline"
+                        >
+                          Inspect
+                        </UButton>
+                      </div>
                     </div>
-                    <UButton color="primary" variant="soft" icon="i-lucide-sparkles" @click="open('F7')">
-                      Preview Sensor Roadmap
-                    </UButton>
                   </div>
                 </UCard>
               </div>
@@ -529,7 +608,7 @@
                     </div>
                     <div class="space-y-1.5">
                       <UBadge color="primary" variant="subtle" size="sm" icon="i-lucide-clock">
-                        F12 &bull; Coming in Sprint 4
+                        F16 &bull; Coming in Sprint 4
                       </UBadge>
                       <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
                         Garden Activity Feed &amp; Field Journal
@@ -538,7 +617,7 @@
                         Track chronological watering events, team role changes, germination logs, and seasonal photos in Sprint 4.
                       </p>
                     </div>
-                    <UButton color="primary" variant="soft" icon="i-lucide-sparkles" @click="open('F12')">
+                    <UButton color="primary" variant="soft" icon="i-lucide-sparkles" @click="open('F16')">
                       Preview Journal Roadmap
                     </UButton>
                   </div>
@@ -768,13 +847,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from '@nuxt/ui/composables';
 import { useGardensStore } from '../../stores/gardens.js';
 import { useMembersStore } from '../../stores/members.js';
 import { useAuthStore } from '../../stores/auth.js';
+import { useSensorsStore } from '../../stores/sensors.js';
+import { useAlertsStore } from '../../stores/alerts.js';
 import { useComingSoon } from '../../composables/useComingSoon.js';
+import realtimeService from '../../services/realtime.js';
+import AlertBellButton from '../../components/AlertBellButton.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -782,6 +865,8 @@ const toast = useToast();
 const gardensStore = useGardensStore();
 const membersStore = useMembersStore();
 const authStore = useAuthStore();
+const sensorsStore = useSensorsStore();
+const alertsStore = useAlertsStore();
 const { open } = useComingSoon();
 
 const activeTab = ref('zones');
@@ -894,6 +979,41 @@ const breadcrumbItems = computed(() => [
   { label: garden.value?.name || 'Garden Workspace' }
 ]);
 
+const allGardenDevices = computed(() => {
+  const list = [];
+  for (const z of gardensStore.zones) {
+    const devs = sensorsStore.devicesByZone[Number(z.id)] || [];
+    for (const d of devs) {
+      list.push({ ...d, zone_name: z.name });
+    }
+  }
+  return list;
+});
+
+function latestReadingForZone(zoneId) {
+  return sensorsStore.latestByZone[Number(zoneId)] || null;
+}
+
+const realtimeBadgeColor = computed(() => {
+  if (realtimeService.connectionStatus.value === 'connected') return 'success';
+  if (realtimeService.connectionStatus.value === 'reconnecting' || realtimeService.connectionStatus.value === 'connecting') return 'warning';
+  return 'neutral';
+});
+
+const realtimeBadgeIcon = computed(() => {
+  if (realtimeService.connectionStatus.value === 'connected') return 'i-lucide-radio';
+  if (realtimeService.connectionStatus.value === 'reconnecting' || realtimeService.connectionStatus.value === 'connecting') return 'i-lucide-refresh-cw';
+  return 'i-lucide-wifi-off';
+});
+
+const realtimeBadgeLabel = computed(() => {
+  const st = realtimeService.connectionStatus.value;
+  if (st === 'connected') return 'Live';
+  if (st === 'reconnecting') return 'Reconnecting';
+  if (st === 'connecting') return 'Connecting';
+  return 'Offline';
+});
+
 const tabItems = computed(() => [
   {
     label: 'Zones',
@@ -921,7 +1041,7 @@ const tabItems = computed(() => [
     value: 'devices',
     slot: 'devices',
     icon: 'i-lucide-cpu',
-    badge: { label: 'Soon', color: 'primary', variant: 'subtle' }
+    badge: allGardenDevices.value.length > 0 ? String(allGardenDevices.value.length) : undefined
   },
   {
     label: 'Activity',
@@ -983,20 +1103,41 @@ async function loadGardenData(gardenId) {
   gardensStore.clearMessages();
   membersStore.clearMessages();
   lastInviteUrl.value = '';
+  const gid = Number(gardenId);
+  alertsStore.setActiveGarden(gid);
   try {
-    const data = await gardensStore.fetchGardenDetail(gardenId);
+    const data = await gardensStore.fetchGardenDetail(gid);
     if (data.members) {
       membersStore.members = data.members;
-      membersStore.activeGardenId = Number(gardenId);
+      membersStore.activeGardenId = gid;
       if (data.garden?.role) {
         membersStore.currentUserRole = data.garden.role;
       }
     }
     if (canManageGarden.value) {
-      await membersStore.fetchInvitations(gardenId).catch(() => {});
+      await membersStore.fetchInvitations(gid).catch(() => {});
     } else {
       membersStore.invitations = [];
     }
+
+    const zoneIds = (data.zones || []).map((z) => z.id);
+    await Promise.all([
+      alertsStore.fetchGardenAlerts(gid).catch(() => {}),
+      sensorsStore.reconcileZoneReadings(zoneIds).catch(() => {}),
+      ...zoneIds.map((zid) => sensorsStore.fetchZoneDevices(zid).catch(() => {}))
+    ]);
+
+    realtimeService.connect(gid, {
+      zoneIds,
+      onAlertTriggered: (frameData) => {
+        toast.add({
+          title: `Alert: ${frameData.zoneName || 'Zone'}`,
+          description: frameData.message,
+          icon: 'i-lucide-bell-ring',
+          color: frameData.severity === 'CRITICAL' ? 'error' : 'warning'
+        });
+      }
+    });
   } catch {
     // Error handled in store
   }
@@ -1008,6 +1149,12 @@ async function handleTabChange(val) {
     await membersStore.fetchMembers(garden.value.id).catch(() => {});
   } else if (val === 'invitations' && canManageGarden.value) {
     await membersStore.fetchInvitations(garden.value.id).catch(() => {});
+  } else if (val === 'devices') {
+    const zoneIds = gardensStore.zones.map((z) => z.id);
+    await Promise.all([
+      sensorsStore.reconcileZoneReadings(zoneIds).catch(() => {}),
+      ...zoneIds.map((zid) => sensorsStore.fetchZoneDevices(zid).catch(() => {}))
+    ]);
   }
 }
 
@@ -1282,4 +1429,8 @@ watch(
     if (newId) loadGardenData(newId);
   }
 );
+
+onUnmounted(() => {
+  realtimeService.disconnect();
+});
 </script>

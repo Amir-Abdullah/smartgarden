@@ -6,6 +6,7 @@
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
+          <AlertBellButton />
           <UColorModeButton />
           <UButton color="primary" size="sm" icon="i-lucide-plus" @click="openCreateModal">
             New Garden
@@ -296,6 +297,7 @@ import { useRouter } from 'vue-router';
 import { useToast } from '@nuxt/ui/composables';
 import { useAuthStore } from '../../stores/auth.js';
 import { useGardensStore } from '../../stores/gardens.js';
+import AlertBellButton from '../../components/AlertBellButton.vue';
 
 const router = useRouter();
 const toast = useToast();

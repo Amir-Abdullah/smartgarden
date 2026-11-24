@@ -6,6 +6,16 @@
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
+          <UBadge
+            data-testid="realtime-status-badge"
+            :color="realtimeBadgeColor"
+            variant="soft"
+            size="sm"
+            :icon="realtimeBadgeIcon"
+          >
+            {{ realtimeBadgeLabel }}
+          </UBadge>
+          <AlertBellButton />
           <UColorModeButton />
           <UButton
             to="/dashboard/catalog"
@@ -37,7 +47,7 @@
             <div class="space-y-1.5">
               <div class="flex flex-wrap items-center gap-2">
                 <UBadge color="primary" variant="subtle" size="sm" icon="i-lucide-sprout">
-                  Workspace Live &bull; F1&ndash;F5
+                  Workspace Live &bull; F1&ndash;F10
                 </UBadge>
                 <UBadge v-if="authStore.user?.location_region" color="neutral" variant="outline" size="sm" icon="i-lucide-map-pin">
                   {{ authStore.user.location_region }}
@@ -185,56 +195,186 @@
           </UTable>
         </UCard>
 
-        <!-- Upcoming Sprint Preview Widgets (F6, F7, F8, F10) -->
+        <!-- Live Operational Widgets (F6, F7, F8, F9) & Sprint 3 Weather Preview (F11) -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 class="text-base font-semibold text-zinc-900 dark:text-white">
-                Upcoming Operational Widgets
+                Live Garden Operations
               </h3>
               <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                Preview upcoming modules arriving in Sprints 2&ndash;3. Click any widget to view upcoming scope.
+                Real-time zone telemetry, open care tasks, unread alerts, and upcoming Sprint 3 weather preview.
               </p>
             </div>
+            <USelect
+              v-if="gardenSelectOptions.length > 1"
+              v-model="selectedLiveGardenId"
+              :items="gardenSelectOptions"
+              value-key="value"
+              size="xs"
+              class="w-56"
+            />
           </div>
 
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <!-- Live Zone Telemetry (F7/F8) -->
+            <UCard data-testid="overview-live-sensors">
+              <template #header>
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <UIcon name="i-lucide-activity" class="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <span class="text-sm font-semibold text-zinc-900 dark:text-white">
+                      Live Sensor Readings
+                    </span>
+                  </div>
+                  <UButton to="/dashboard/sensors" size="xs" color="primary" variant="soft" trailing-icon="i-lucide-arrow-right">
+                    Sensors Console
+                  </UButton>
+                </div>
+              </template>
+
+              <div v-if="liveZones.length === 0" class="py-4 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                Select or create a garden with growing zones to stream live soil &amp; climate metrics.
+              </div>
+              <div v-else class="space-y-2.5">
+                <div
+                  v-for="z in liveZones.slice(0, 4)"
+                  :key="z.id"
+                  class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50"
+                >
+                  <span class="font-semibold text-zinc-800 dark:text-zinc-200">{{ z.name }}</span>
+                  <div v-if="latestByZone(z.id)" class="flex flex-wrap items-center gap-2.5 text-zinc-600 dark:text-zinc-300">
+                    <span>{{ latestByZone(z.id).soil_moisture !== null && latestByZone(z.id).soil_moisture !== undefined ? `${Number(latestByZone(z.id).soil_moisture).toFixed(1)}%` : '—' }} Moisture</span>
+                    <span>{{ latestByZone(z.id).temperature !== null && latestByZone(z.id).temperature !== undefined ? `${Number(latestByZone(z.id).temperature).toFixed(1)}°C` : '—' }}</span>
+                    <span>{{ latestByZone(z.id).humidity !== null && latestByZone(z.id).humidity !== undefined ? `${Number(latestByZone(z.id).humidity).toFixed(0)}%` : '—' }} RH</span>
+                    <span>{{ latestByZone(z.id).light_lux !== null && latestByZone(z.id).light_lux !== undefined ? `${Number(latestByZone(z.id).light_lux).toLocaleString()} lx` : '—' }}</span>
+                  </div>
+                  <span v-else class="text-zinc-400">Awaiting sensor sample</span>
+                </div>
+              </div>
+            </UCard>
+
+            <!-- Active Care Tasks Queue (F6) -->
+            <UCard data-testid="overview-live-tasks">
+              <template #header>
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <UIcon name="i-lucide-check-square" class="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <span class="text-sm font-semibold text-zinc-900 dark:text-white">
+                      Active Care Tasks
+                    </span>
+                  </div>
+                  <UButton to="/dashboard/care-tasks" size="xs" color="primary" variant="soft" trailing-icon="i-lucide-arrow-right">
+                    Manage Tasks
+                  </UButton>
+                </div>
+              </template>
+
+              <div v-if="openGardenTasks.length === 0" class="py-4 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                No open care tasks queued for this garden.
+              </div>
+              <div v-else class="space-y-2">
+                <div
+                  v-for="task in openGardenTasks.slice(0, 4)"
+                  :key="task.id"
+                  class="flex items-center justify-between gap-2 rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50"
+                >
+                  <div class="min-w-0">
+                    <span class="font-semibold text-zinc-800 dark:text-zinc-200">{{ task.task_type }}</span>
+                    <span class="mx-1 text-zinc-400">&bull;</span>
+                    <span class="text-zinc-600 dark:text-zinc-300">{{ task.zone_name || `Zone #${task.zone_id}` }}</span>
+                    <p class="truncate text-[11px] text-zinc-500">{{ task.notes || `Due ${task.due_date}` }}</p>
+                  </div>
+                  <UBadge color="neutral" variant="subtle" size="xs">{{ task.due_date }}</UBadge>
+                </div>
+              </div>
+            </UCard>
+
+            <!-- Recent Unread Alerts (F9) -->
+            <UCard data-testid="overview-live-alerts">
+              <template #header>
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <UIcon name="i-lucide-bell-ring" class="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <span class="text-sm font-semibold text-zinc-900 dark:text-white">
+                      Recent Alerts
+                    </span>
+                    <UBadge v-if="alertsStore.unreadCount > 0" color="error" variant="soft" size="xs">
+                      {{ alertsStore.unreadCount }} unread
+                    </UBadge>
+                  </div>
+                  <UButton to="/dashboard/alerts" size="xs" color="primary" variant="soft" trailing-icon="i-lucide-arrow-right">
+                    View Alerts
+                  </UButton>
+                </div>
+              </template>
+
+              <div v-if="recentGardenAlerts.length === 0" class="py-4 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                All zones within configured threshold bounds.
+              </div>
+              <div v-else class="space-y-2">
+                <div
+                  v-for="alert in recentGardenAlerts.slice(0, 4)"
+                  :key="String(alert.id)"
+                  class="flex items-center justify-between gap-2 rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50"
+                >
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5">
+                      <UBadge :color="alert.severity === 'CRITICAL' ? 'error' : alert.severity === 'WARNING' ? 'warning' : 'info'" variant="soft" size="xs">
+                        {{ alert.severity }}
+                      </UBadge>
+                      <span class="truncate font-medium text-zinc-800 dark:text-zinc-200">{{ alert.zone_name || alert.metric }}</span>
+                    </div>
+                    <p class="mt-0.5 truncate text-[11px] text-zinc-500 dark:text-zinc-400">{{ alert.message }}</p>
+                  </div>
+                  <UButton
+                    v-if="!alert.is_read"
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    icon="i-lucide-check"
+                    aria-label="Mark alert read"
+                    @click="alertsStore.markAlertRead(alert.id)"
+                  />
+                </div>
+              </div>
+            </UCard>
+
+            <!-- Weather Forecast Preview (F11, Sprint 3) -->
             <UCard
-              v-for="widget in previewWidgets"
-              :key="widget.featureId"
               class="group relative cursor-pointer overflow-hidden transition-colors hover:border-emerald-400 dark:hover:border-emerald-700"
-              @click="open(widget.featureId)"
+              @click="open('F11')"
             >
               <template #header>
                 <div class="flex items-center justify-between gap-2">
                   <div class="flex items-center gap-2">
-                    <UIcon :name="widget.icon" class="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <UIcon name="i-lucide-cloud-sun" class="size-4 text-emerald-600 dark:text-emerald-400" />
                     <span class="text-sm font-semibold text-zinc-900 dark:text-white">
-                      {{ widget.title }}
+                      Weather Forecast
                     </span>
                   </div>
                   <UBadge color="primary" variant="subtle" size="xs" icon="i-lucide-clock">
-                    Coming in Sprint {{ widget.sprint }}
+                    Coming in Sprint 3
                   </UBadge>
                 </div>
               </template>
 
               <div class="relative">
                 <div class="space-y-2 opacity-65 transition-opacity group-hover:opacity-40">
-                  <div
-                    v-for="(item, idx) in widget.previewRows"
-                    :key="idx"
-                    class="flex items-center justify-between rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50"
-                  >
-                    <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ item.label }}</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">{{ item.value }}</span>
+                  <div class="flex items-center justify-between rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">7-Day Precipitation Outlook</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Rain-delay integration</span>
+                  </div>
+                  <div class="flex items-center justify-between rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">Overnight Frost Risk</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">24h early alert</span>
                   </div>
                 </div>
 
                 <div class="mt-3 flex items-center justify-between text-xs">
-                  <span class="text-zinc-500 dark:text-zinc-400">{{ widget.caption }}</span>
+                  <span class="text-zinc-500 dark:text-zinc-400">Coordinate-accurate rainfall &amp; frost tracking</span>
                   <span class="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-                    Preview Sprint {{ widget.sprint }}
+                    Preview Sprint 3
                     <UIcon name="i-lucide-arrow-up-right" class="size-3.5" />
                   </span>
                 </div>
@@ -310,18 +450,28 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from '@nuxt/ui/composables';
 import { useAuthStore } from '../../stores/auth.js';
 import { useGardensStore } from '../../stores/gardens.js';
+import { useTasksStore } from '../../stores/tasks.js';
+import { useSensorsStore } from '../../stores/sensors.js';
+import { useAlertsStore } from '../../stores/alerts.js';
 import { useComingSoon } from '../../composables/useComingSoon.js';
+import realtimeService from '../../services/realtime.js';
+import AlertBellButton from '../../components/AlertBellButton.vue';
 
 const router = useRouter();
 const toast = useToast();
 const authStore = useAuthStore();
 const gardensStore = useGardensStore();
+const tasksStore = useTasksStore();
+const sensorsStore = useSensorsStore();
+const alertsStore = useAlertsStore();
 const { open } = useComingSoon();
+
+const selectedLiveGardenId = ref(null);
 
 const isCreateOpen = ref(false);
 const createError = ref('');
@@ -397,52 +547,80 @@ const gardenColumns = [
   { id: 'actions', header: '' }
 ];
 
-const previewWidgets = [
-  {
-    featureId: 'F7',
-    title: 'Live Sensor Readings',
-    sprint: 2,
-    icon: 'i-lucide-activity',
-    caption: 'Real-time MQTT & ESP32 soil moisture telemetry',
-    previewRows: [
-      { label: 'South Raised Bed — Soil Moisture', value: 'Sample: 62% (Optimal)' },
-      { label: 'Greenhouse — Ambient Temp', value: 'Sample: 23.4°C • 58% RH' }
-    ]
-  },
-  {
-    featureId: 'F6',
-    title: "Today's Care Tasks",
-    sprint: 2,
-    icon: 'i-lucide-check-square',
-    caption: 'Botanical watering & fertilizing queues',
-    previewRows: [
-      { label: 'Water Roma Tomatoes (Every 2d)', value: 'Scheduled queue' },
-      { label: 'Feed Sweet Basil Guild (Every 21d)', value: 'Scheduled queue' }
-    ]
-  },
-  {
-    featureId: 'F10',
-    title: 'Weather Forecast',
-    sprint: 3,
-    icon: 'i-lucide-cloud-sun',
-    caption: 'Coordinate-accurate rainfall & frost tracking',
-    previewRows: [
-      { label: '7-Day Precipitation Outlook', value: 'Rain-delay integration' },
-      { label: 'Overnight Frost Risk', value: '24h early alert' }
-    ]
-  },
-  {
-    featureId: 'F8',
-    title: 'Recent Alerts',
-    sprint: 2,
-    icon: 'i-lucide-bell-ring',
-    caption: 'Automated threshold drift notifications',
-    previewRows: [
-      { label: 'Moisture Drift Watch', value: 'Per-species bounds' },
-      { label: 'Heat Stress Guardrail', value: 'Severity-ranked feed' }
-    ]
+const gardenSelectOptions = computed(() =>
+  gardensStore.gardens.map((g) => ({ label: g.name, value: g.id }))
+);
+
+const liveZones = computed(() => {
+  if (!selectedLiveGardenId.value) return [];
+  if (
+    gardensStore.activeGarden &&
+    Number(gardensStore.activeGarden.id) === Number(selectedLiveGardenId.value)
+  ) {
+    return gardensStore.zones;
   }
-];
+  return [];
+});
+
+const openGardenTasks = computed(() => {
+  const gid = Number(selectedLiveGardenId.value);
+  if (!gid) return [];
+  return (tasksStore.tasksByGarden[gid] || []).filter((t) => !t.is_completed);
+});
+
+const recentGardenAlerts = computed(() => {
+  const gid = Number(selectedLiveGardenId.value);
+  if (!gid) return [];
+  return (alertsStore.alertsByGarden[gid] || []).filter((a) => !a.is_read);
+});
+
+function latestByZone(zoneId) {
+  return sensorsStore.latestByZone[Number(zoneId)] || null;
+}
+
+const realtimeBadgeColor = computed(() => {
+  if (realtimeService.connectionStatus.value === 'connected') return 'success';
+  if (realtimeService.connectionStatus.value === 'reconnecting' || realtimeService.connectionStatus.value === 'connecting') return 'warning';
+  return 'neutral';
+});
+
+const realtimeBadgeIcon = computed(() => {
+  if (realtimeService.connectionStatus.value === 'connected') return 'i-lucide-radio';
+  if (realtimeService.connectionStatus.value === 'reconnecting' || realtimeService.connectionStatus.value === 'connecting') return 'i-lucide-refresh-cw';
+  return 'i-lucide-wifi-off';
+});
+
+const realtimeBadgeLabel = computed(() => {
+  const st = realtimeService.connectionStatus.value;
+  if (st === 'connected') return 'Live';
+  if (st === 'reconnecting') return 'Reconnecting';
+  if (st === 'connecting') return 'Connecting';
+  return 'Offline';
+});
+
+async function initLiveGarden(gardenId) {
+  const gid = Number(gardenId);
+  if (!gid) return;
+  alertsStore.setActiveGarden(gid);
+  const detail = await gardensStore.fetchGardenDetail(gid).catch(() => null);
+  const zoneIds = (detail?.zones || []).map((z) => z.id);
+  await Promise.all([
+    tasksStore.fetchGardenTasks(gid, { is_completed: 'false' }).catch(() => {}),
+    alertsStore.fetchGardenAlerts(gid).catch(() => {}),
+    sensorsStore.reconcileZoneReadings(zoneIds).catch(() => {})
+  ]);
+  realtimeService.connect(gid, {
+    zoneIds,
+    onAlertTriggered: (frameData) => {
+      toast.add({
+        title: `Alert: ${frameData.zoneName || 'Garden'}`,
+        description: frameData.message,
+        icon: 'i-lucide-bell-ring',
+        color: frameData.severity === 'CRITICAL' ? 'error' : 'warning'
+      });
+    }
+  });
+}
 
 function roleColor(role) {
   if (role === 'OWNER') return 'success';
@@ -490,8 +668,23 @@ async function handleCreateGarden() {
   }
 }
 
-onMounted(() => {
+watch(selectedLiveGardenId, (newId, oldId) => {
+  if (newId && oldId && Number(newId) !== Number(oldId)) {
+    initLiveGarden(newId);
+  }
+});
+
+onMounted(async () => {
   gardensStore.clearMessages();
-  gardensStore.fetchGardens().catch(() => {});
+  const gardens = await gardensStore.fetchGardens().catch(() => []);
+  const firstId = gardens?.[0]?.id || gardensStore.activeGarden?.id;
+  if (firstId) {
+    selectedLiveGardenId.value = Number(firstId);
+    await initLiveGarden(firstId);
+  }
+});
+
+onUnmounted(() => {
+  realtimeService.disconnect();
 });
 </script>

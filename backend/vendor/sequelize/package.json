@@ -1,0 +1,6 @@
+{
+  "name": "sequelize",
+  "version": "6.37.3",
+  "description": "Multi-dialect SQL ORM for Node.js",
+  "main": "index.js"
+}

@@ -1,10 +1,10 @@
 /**
- * SmartGarden Feature & Navigation Registry (F1-F20)
- * F1-F5 are live in Sprint 1; F6-F20 are scheduled across Sprints 2-6.
+ * SmartGarden Feature & Navigation Registry (F1-F24)
+ * F1-F5 are live in Sprint 1; F6-F10 are live in Sprint 2; F11-F24 are scheduled across Sprints 3-5.
  */
 
 export const FEATURES = [
-  // Live Features (F1 - F5)
+  // Live Features (F1 - F5, Sprint 1)
   {
     id: 'F1',
     code: 'F1',
@@ -71,217 +71,295 @@ export const FEATURES = [
     summary: 'Live bed capacity utilization gauges, overcrowding warnings, and automated companion synergy/conflict analysis.'
   },
 
-  // Upcoming Features (F6 - F20)
+  // Live Features (F6 - F10, Sprint 2)
   {
     id: 'F6',
     code: 'F6',
     slug: 'care-tasks',
-    title: 'Care Tasks & Schedules',
+    title: 'Recurring Care Tasks & Watering',
     shortTitle: 'Care Tasks',
-    status: 'soon',
+    status: 'live',
     sprint: 2,
     section: 'ops',
     icon: 'i-lucide-check-square',
     to: '/dashboard/care-tasks',
-    summary: 'Automated watering, fertilizing, and pruning task queues generated from each zone plant\'s botanical cadence.',
+    summary: 'Timezone-aware recurring watering, fertilizing, and pruning task queues with atomic water usage logging.',
     highlights: [
-      'Recurring watering & feeding schedules per species',
-      'Team member task assignments & completion logs',
-      'Rain-delay snoozing tied to local weather'
+      'Recurring watering & feeding schedules per zone and crop',
+      'Team member task assignments & atomic water volume logs',
+      'Auto-rescheduling in garden timezone on completion'
     ]
   },
   {
     id: 'F7',
     code: 'F7',
     slug: 'sensors',
-    title: 'IoT Soil & Climate Sensors',
+    title: 'IoT Sensor Ingestion & Telemetry',
     shortTitle: 'Sensors',
-    status: 'soon',
+    status: 'live',
     sprint: 2,
     section: 'ops',
     icon: 'i-lucide-activity',
     to: '/dashboard/sensors',
-    summary: 'Real-time soil moisture, ambient temperature, humidity, and PAR light telemetry streamed over WebSockets.',
+    summary: 'Real-time soil moisture, ambient temperature, humidity, and light telemetry with SHA-256 device keys and 30d rollups.',
     highlights: [
-      'MQTT & HTTP sensor bridge for ESP32 / LoRaWAN nodes',
-      'Live zone telemetry charts and battery diagnostics',
-      'Calibration profiles by soil type'
+      'One-time sg_live_ API key provisioning, claim & key rotation',
+      'Clock-skew normalized sensor ingestion & bounds validation',
+      'Interactive SVG telemetry charts & 30-day daily statistics'
     ]
   },
   {
     id: 'F8',
     code: 'F8',
-    slug: 'alerts',
-    title: 'Smart Threshold Alerts',
-    shortTitle: 'Alerts',
-    status: 'soon',
+    slug: 'realtime-dashboard',
+    title: 'Real-Time Live WebSocket Dashboard',
+    shortTitle: 'Live Dashboard',
+    status: 'live',
     sprint: 2,
-    section: 'ops',
-    icon: 'i-lucide-bell-ring',
-    to: '/dashboard/alerts',
-    summary: 'Proactive frost, drought, and heat-stress alerts triggered when telemetry drifts outside plant catalog ideals.',
+    section: 'platform',
+    icon: 'i-lucide-radio',
+    to: '/dashboard',
+    summary: 'Live WebSocket telemetry streaming with automatic SSE fallback, exponential backoff, and REST reconciliation.',
     highlights: [
-      'Per-species moisture & temperature threshold rules',
-      'Frost protection warnings 24 hours ahead',
-      'Severity-ranked alert feed with acknowledgement'
+      'Sub-second SENSOR_UPDATE, ALERT_TRIGGERED, and TASK_UPDATED streams',
+      'Automatic SSE fallback when WebSockets are unavailable',
+      'Idempotent REST state reconciliation on reconnect'
     ]
   },
   {
     id: 'F9',
     code: 'F9',
-    slug: 'automations',
-    title: 'Irrigation & Climate Automations',
-    shortTitle: 'Automations',
-    status: 'soon',
-    sprint: 3,
+    slug: 'alerts',
+    title: 'Smart Threshold Alerts & Quiet Hours',
+    shortTitle: 'Alerts',
+    status: 'live',
+    sprint: 2,
     section: 'ops',
-    icon: 'i-lucide-workflow',
-    to: '/dashboard/automations',
-    summary: 'Rule-based drip valve, greenhouse vent, and grow-light automations driven by moisture and time windows.',
+    icon: 'i-lucide-bell-ring',
+    to: '/dashboard/alerts',
+    summary: 'Proactive moisture, temperature, humidity, light, and offline-device alerts with per-zone thresholds and IANA quiet hours.',
     highlights: [
-      'Visual trigger-condition-action automation builder',
-      'Moisture-gated drip irrigation valves',
-      'Fail-safe max-runtime guards'
+      'Per-zone thresholds backed by botanical catalog defaults',
+      'Midnight-crossing IANA quiet hours & cooldown suppression',
+      'Severity-ranked alert inbox with live unread bell badge'
     ]
   },
   {
     id: 'F10',
     code: 'F10',
+    slug: 'automations',
+    title: 'Automation Rule Engine',
+    shortTitle: 'Automations',
+    status: 'live',
+    sprint: 2,
+    section: 'ops',
+    icon: 'i-lucide-workflow',
+    to: '/dashboard/automations',
+    summary: 'Condition-action automation rules with 3-layer deduplication, atomic daily execution caps, and scheduled evaluation.',
+    highlights: [
+      'Visual IF [metric] [operator] [value] AND [weather] THEN [action] builder',
+      'Open-task deduplication and atomic daily execution caps',
+      'Instant enable/disable switch and trigger history tracking'
+    ]
+  },
+
+  // Upcoming Features (F11 - F15, Sprint 3)
+  {
+    id: 'F11',
+    code: 'F11',
     slug: 'weather',
-    title: 'Hyperlocal Weather & Frost',
+    title: 'Weather-Aware Planning & Spatial Cache',
     shortTitle: 'Weather',
     status: 'soon',
     sprint: 3,
     section: 'ops',
     icon: 'i-lucide-cloud-sun',
     to: '/dashboard/weather',
-    summary: '7-day microclimate forecasts, evapotranspiration estimates, and precipitation tracking per garden coordinate.',
+    summary: '7-day microclimate forecasts, spatial grid caching, frost watchdogs, and automatic rain-delay watering skips.',
     highlights: [
-      'Coordinate-accurate rainfall & UV index forecasts',
-      'Growing degree days (GDD) accumulation',
-      'Automatic watering skip recommendations'
+      'Coordinate-accurate rainfall & frost forecasts via Open-Meteo',
+      '24h rain-skip irrigation adjustments',
+      'Weather-aware automation rule evaluation'
     ]
   },
   {
-    id: 'F11',
-    code: 'F11',
+    id: 'F12',
+    code: 'F12',
     slug: 'calendar',
-    title: 'Dynamic Planting Calendar',
+    title: 'Seasonal Planting Calendar',
     shortTitle: 'Planting Calendar',
     status: 'soon',
     sprint: 3,
     section: 'ops',
     icon: 'i-lucide-calendar-days',
     to: '/dashboard/calendar',
-    summary: 'Season-by-season sowing, transplanting, and harvest timelines tailored to your USDA zone and last frost date.',
+    summary: 'Regional sowing, transplanting, and harvest timelines with hemisphere awareness and RFC 5545 .ics export.',
     highlights: [
-      'Indoor seed-start vs direct-sow windows',
-      'Succession planting reminders',
-      'iCal / Google Calendar feed export'
-    ]
-  },
-  {
-    id: 'F12',
-    code: 'F12',
-    slug: 'journal',
-    title: 'Garden Journal & Photos',
-    shortTitle: 'Journal',
-    status: 'soon',
-    sprint: 4,
-    section: 'insights',
-    icon: 'i-lucide-notebook-pen',
-    to: '/dashboard/journal',
-    summary: 'Chronological field notes, germination logs, and visual growth comparisons across seasons.',
-    highlights: [
-      'Photo timelines tagged to zones and crops',
-      'Seasonal comparison & frost date logs',
-      'Searchable markdown field observations'
+      'Indoor seed-start vs direct-sow seasonal windows',
+      'Southern Hemisphere +6 month seasonal offset',
+      '1-click .ics calendar export'
     ]
   },
   {
     id: 'F13',
     code: 'F13',
+    slug: 'care-plan-generator',
+    title: 'Personalized Care Plan Generator',
+    shortTitle: 'Care Plans',
+    status: 'soon',
+    sprint: 3,
+    section: 'insights',
+    icon: 'i-lucide-sparkles',
+    to: '/dashboard/care-plans',
+    summary: 'Calibrates watering and feeding frequencies from each zone’s soil type, sun exposure, and active species.',
+    highlights: [
+      'Soil drainage & sun multiplier calibration',
+      'Preview schedules before creating recurring tasks',
+      'Tagged CARE_PLAN task generation'
+    ]
+  },
+  {
+    id: 'F14',
+    code: 'F14',
+    slug: 'plant-recommendations',
+    title: 'Plant Recommendation Engine',
+    shortTitle: 'Recommendations',
+    status: 'soon',
+    sprint: 3,
+    section: 'insights',
+    icon: 'i-lucide-compass',
+    to: '/dashboard/recommendations',
+    summary: '100-point multi-factor scorer ranking catalog species by sunlight, season, soil compatibility, bed area, and companions.',
+    highlights: [
+      'Explainable 5-factor compatibility breakdown',
+      'Spatial fit check against remaining zone area',
+      '1-click add recommended crop to zone'
+    ]
+  },
+  {
+    id: 'F15',
+    code: 'F15',
+    slug: 'companion-advisor',
+    title: 'Companion Planting Advisor',
+    shortTitle: 'Companion Advisor',
+    status: 'soon',
+    sprint: 3,
+    section: 'insights',
+    icon: 'i-lucide-heart-handshake',
+    to: '/dashboard/companions',
+    summary: 'Pairwise synergy and conflict matrix with group alias matching and interactive bed compatibility heatmaps.',
+    highlights: [
+      'Pairwise guild scoring across candidate crops',
+      'Botanical family & group alias resolution',
+      'Visual compatibility heatmap matrix'
+    ]
+  },
+
+  // Upcoming Features (F16 - F20, Sprint 4)
+  {
+    id: 'F16',
+    code: 'F16',
+    slug: 'journal',
+    title: 'Growth Journal & Photo Timeline',
+    shortTitle: 'Growth Journal',
+    status: 'soon',
+    sprint: 4,
+    section: 'insights',
+    icon: 'i-lucide-notebook-pen',
+    to: '/dashboard/journal',
+    summary: 'Chronological field notes, plant height tracking, and visual growth photo timelines across seasons.',
+    highlights: [
+      'Photo timelines tagged to zones and crops',
+      'Height progression & before/after comparisons',
+      'Searchable field observation logs'
+    ]
+  },
+  {
+    id: 'F17',
+    code: 'F17',
     slug: 'analytics',
-    title: 'Yield & Soil Analytics',
+    title: 'Analytics & Data Export',
     shortTitle: 'Analytics',
     status: 'soon',
     sprint: 4,
     section: 'insights',
     icon: 'i-lucide-bar-chart-3',
     to: '/dashboard/analytics',
-    summary: 'Harvest weight tracking, bed productivity benchmarks, and multi-month moisture stability trends.',
+    summary: 'Daily sensor rollups, water consumption analytics, and formatted PDF/CSV seasonal reports.',
     highlights: [
-      'Harvest yield per square meter by crop',
+      'Water usage & moisture stability trendlines',
       'Zone-to-zone performance comparisons',
-      'CSV / JSON seasonal export'
+      'Formatted PDF & CSV data exports'
     ]
   },
   {
-    id: 'F14',
-    code: 'F14',
+    id: 'F18',
+    code: 'F18',
     slug: 'ai-diagnosis',
-    title: 'AI Pest & Disease Diagnosis',
+    title: 'AI Leaf Disease & Pest Diagnosis',
     shortTitle: 'AI Diagnosis',
     status: 'soon',
-    sprint: 5,
+    sprint: 4,
     section: 'insights',
     icon: 'i-lucide-scan-search',
     to: '/dashboard/ai-diagnosis',
     summary: 'Upload leaf or stem photos to identify nutrient deficiencies, fungal blights, and common garden pests.',
     highlights: [
-      'Computer-vision symptom classification',
+      'Vision-powered symptom classification',
       'Organic & biological treatment guides',
-      'Quarantine & companion prevention tips'
+      'Deterministic offline diagnostic fallback'
     ]
   },
   {
-    id: 'F15',
-    code: 'F15',
+    id: 'F19',
+    code: 'F19',
     slug: 'ai-assistant',
-    title: 'AI Agronomist Assistant',
+    title: 'AI Gardening Assistant',
     shortTitle: 'AI Assistant',
     status: 'soon',
-    sprint: 5,
+    sprint: 4,
     section: 'insights',
     icon: 'i-lucide-bot',
     to: '/dashboard/ai-assistant',
-    summary: 'Context-aware gardening copilot that reads your zones, soil types, and companion layout before answering.',
+    summary: 'Context-aware gardening copilot that reads your zones, soil types, live sensors, and alerts before answering.',
     highlights: [
-      'Zone-aware crop rotation suggestions',
-      'Instant troubleshooting using live inventory',
-      'Natural-language bed layout planning'
+      'Zone-aware crop rotation & troubleshooting',
+      'Grounded in live inventory and telemetry',
+      'Streaming responses with deterministic fallback'
     ]
   },
   {
-    id: 'F16',
-    code: 'F16',
+    id: 'F20',
+    code: 'F20',
     slug: 'community',
-    title: 'Community Garden Exchange',
+    title: 'Community Hub & Social Feed',
     shortTitle: 'Community',
     status: 'soon',
-    sprint: 5,
+    sprint: 4,
     section: 'insights',
     icon: 'i-lucide-globe',
     to: '/dashboard/community',
-    summary: 'Share proven bed templates, local climate notes, and surplus harvest swaps with nearby growers.',
+    summary: 'Share proven bed tips, local climate notes, threaded discussions, and moderated community posts.',
     highlights: [
-      'Regional microclimate grower circles',
-      'Cloneable zone & companion blueprints',
-      'Seed & seedling swap boards'
+      'Grower feed with likes, follows & threaded comments',
+      'Regional microclimate knowledge exchange',
+      'Built-in community moderation controls'
     ]
   },
+
+  // Upcoming Features (F21 - F24, Sprint 5)
   {
-    id: 'F17',
-    code: 'F17',
+    id: 'F21',
+    code: 'F21',
     slug: 'notifications',
     title: 'Multi-Channel Notifications',
     shortTitle: 'Notifications',
     status: 'soon',
-    sprint: 6,
+    sprint: 5,
     section: 'account',
     icon: 'i-lucide-mail',
     to: '/dashboard/settings',
-    summary: 'Granular email, web push, and webhook digests for team invitations, frost warnings, and daily care tasks.',
+    summary: 'Unified notification inbox with per-garden overrides, email digests, Web Push, and SSRF-guarded webhooks.',
     highlights: [
       'Digest frequency & quiet-hours controls',
       'Web Push & Slack/Discord webhooks',
@@ -289,16 +367,16 @@ export const FEATURES = [
     ]
   },
   {
-    id: 'F18',
-    code: 'F18',
+    id: 'F22',
+    code: 'F22',
     slug: 'sustainability',
     title: 'Water & Sustainability Metrics',
-    shortTitle: 'Water Tracking',
+    shortTitle: 'Sustainability',
     status: 'soon',
-    sprint: 6,
+    sprint: 5,
     section: 'insights',
     icon: 'i-lucide-droplets',
-    to: '/dashboard/analytics',
+    to: '/dashboard/analytics?feature=F22',
     summary: 'Measure rainwater catchment usage, drip irrigation savings, and compost carbon offsets.',
     highlights: [
       'Litres saved vs overhead watering baseline',
@@ -307,16 +385,16 @@ export const FEATURES = [
     ]
   },
   {
-    id: 'F19',
-    code: 'F19',
+    id: 'F23',
+    code: 'F23',
     slug: 'seed-inventory',
     title: 'Seed Vault & Germination Logs',
     shortTitle: 'Seed Vault',
     status: 'soon',
-    sprint: 6,
+    sprint: 5,
     section: 'ops',
     icon: 'i-lucide-package',
-    to: '/dashboard/calendar',
+    to: '/dashboard/calendar?feature=F23',
     summary: 'Track seed packet expiry, germination rates, and heirloom provenance linked directly to catalog species.',
     highlights: [
       'Packet lot numbers & viability tracking',
@@ -325,21 +403,21 @@ export const FEATURES = [
     ]
   },
   {
-    id: 'F20',
-    code: 'F20',
+    id: 'F24',
+    code: 'F24',
     slug: 'api-developer',
-    title: 'Public Profiles & API Keys',
-    shortTitle: 'API & Billing',
+    title: 'Public Profiles & Scoped API Keys',
+    shortTitle: 'Public & API Keys',
     status: 'soon',
-    sprint: 6,
+    sprint: 5,
     section: 'account',
     icon: 'i-lucide-key-round',
     to: '/dashboard/settings',
     summary: 'Scoped personal access tokens for custom Home Assistant integrations, plus shareable public garden pages.',
     highlights: [
-      'Scoped REST & WebSocket API tokens',
-      'Home Assistant & Webhook connectors',
-      'Team billing & plan management'
+      'Scoped REST & WebSocket API tokens (sg_pat_)',
+      'Opt-in public grower profiles & garden showcases',
+      'Profile & timezone settings management'
     ]
   }
 ];
@@ -386,10 +464,10 @@ export const PUBLIC_COMING_SOON_PAGES = {
     title: 'Release Changelog',
     sprint: 2,
     icon: 'i-lucide-sparkles',
-    summary: 'Sprint 1 shipped F1–F5 with full Nuxt UI 4 interface, 32-species catalog, and MariaDB/SQLite parity.',
+    summary: 'Sprint 1 shipped F1–F5 and Sprint 2 shipped F6–F10 with care tasks, live IoT sensors, WebSockets, smart alerts, and automation rules.',
     highlights: [
       'v1.0: Auth, RBAC, Gardens, Zones, Catalog & Inventory',
-      'v1.1 (Next): Care Tasks, Sensors & Smart Alerts'
+      'v2.0: Care Tasks, Sensors, Realtime WS/SSE, Smart Alerts & Rules'
     ]
   },
   help: {
@@ -444,6 +522,11 @@ export function getFeatureById(idOrSlug) {
   );
 }
 
+const SPRINT_LABELS = {
+  1: 'Sprint 1 — Live Foundation',
+  2: 'Sprint 2 — Live Operations & Telemetry'
+};
+
 export function getFeaturesBySprint() {
   const groups = new Map();
   for (const feature of FEATURES) {
@@ -451,14 +534,25 @@ export function getFeaturesBySprint() {
     if (!groups.has(sprintNum)) {
       groups.set(sprintNum, {
         sprint: sprintNum,
-        label: sprintNum === 1 ? 'Sprint 1 — Live Foundation' : `Sprint ${sprintNum} — Planned`,
-        status: sprintNum === 1 ? 'live' : 'soon',
+        label: '',
+        status: 'soon',
         features: []
       });
     }
     groups.get(sprintNum).features.push(feature);
   }
-  return Array.from(groups.values()).sort((a, b) => a.sprint - b.sprint);
+  return Array.from(groups.values())
+    .sort((a, b) => a.sprint - b.sprint)
+    .map((group) => {
+      const allLive = group.features.length > 0 && group.features.every((f) => f.status === 'live');
+      return {
+        ...group,
+        status: allLive ? 'live' : 'soon',
+        label: allLive
+          ? (SPRINT_LABELS[group.sprint] || `Sprint ${group.sprint} — Live`)
+          : `Sprint ${group.sprint} — Planned`
+      };
+    });
 }
 
 export const PUBLIC_NAV_ITEMS = [

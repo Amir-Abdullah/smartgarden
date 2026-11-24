@@ -5,9 +5,25 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const dbConfig = require('../config/database');
-const { User, Garden, GardenMember, Zone, PlantCatalog, ZonePlant } = require('../models');
+const {
+  User,
+  Garden,
+  GardenMember,
+  Zone,
+  PlantCatalog,
+  ZonePlant,
+  Device,
+  SensorReading,
+  SensorAggregateDaily,
+  CareTask,
+  WaterUsageLog,
+  AlertConfig,
+  AlertLog,
+  AutomationRule
+} = require('../models');
 const { runMigrations } = require('./migrate');
 const { runSeed } = require('./seed');
 
@@ -375,20 +391,299 @@ async function ensureZonePlant(zone, catalogPlant, spec) {
   return { zonePlant, action };
 }
 
+async function ensureSprint2DemoData(demoUser, seededZonesByName) {
+  const stats = {
+    devices: 0,
+    sensorReadings: 0,
+    dailyAggregates: 0,
+    careTasks: 0,
+    waterLogs: 0,
+    alertConfigs: 0,
+    alertLogs: 0,
+    automationRules: 0
+  };
+
+  const southBed = seededZonesByName.get('South Raised Bed');
+  const greenhouse = seededZonesByName.get('Glass Greenhouse');
+  const hydro = seededZonesByName.get('Kitchen Counter Hydroponics');
+
+  const deviceSpecs = [
+    southBed && {
+      zone: southBed,
+      device_name: 'South Bed Moisture & Lux Node',
+      device_uid: 'SG-DEMO-BED-01',
+      rawKey: 'sg_live_demo_south_bed_node_01_abcdef1234567890',
+      device_type: 'ESP32_WROOM',
+      firmware_version: 'v1.4.2'
+    },
+    greenhouse && {
+      zone: greenhouse,
+      device_name: 'Greenhouse Climate Sensor',
+      device_uid: 'SG-DEMO-GH-01',
+      rawKey: 'sg_live_demo_greenhouse_01_abcdef1234567890ab',
+      device_type: 'SG_PRO_V1',
+      firmware_version: 'v2.1.0'
+    },
+    hydro && {
+      zone: hydro,
+      device_name: 'Hydroponics Rail Monitor',
+      device_uid: 'SG-DEMO-HYD-01',
+      rawKey: 'sg_live_demo_hydroponics_01_abcdef1234567890a',
+      device_type: 'SIMULATOR',
+      firmware_version: 'sim-2.0.0'
+    }
+  ].filter(Boolean);
+
+  const now = new Date();
+  for (const spec of deviceSpecs) {
+    let device = await Device.findOne({ where: { device_uid: spec.device_uid } });
+    if (!device) {
+      const key_prefix = spec.rawKey.slice(0, 16);
+      const key_hash = crypto.createHash('sha256').update(spec.rawKey).digest('hex');
+      device = await Device.create({
+        zone_id: spec.zone.id,
+        device_name: spec.device_name,
+        device_uid: spec.device_uid,
+        key_prefix,
+        key_hash,
+        device_type: spec.device_type,
+        firmware_version: spec.firmware_version,
+        is_active: true,
+        last_seen_at: new Date(now.getTime() - 5 * 60000)
+      });
+      stats.devices++;
+    }
+
+    const existingReadings = await SensorReading.count({ where: { device_id: device.id } });
+    if (existingReadings === 0) {
+      for (let h = 23; h >= 0; h--) {
+        const ts = new Date(now.getTime() - h * 3600000);
+        const angle = (2 * Math.PI * ((ts.getUTCHours() - 6) / 24));
+        const solar = Math.max(0, Math.sin(angle));
+        await SensorReading.create({
+          zone_id: spec.zone.id,
+          device_id: device.id,
+          soil_moisture: Math.round((56 - (23 - h) * 0.4 + Math.sin(angle) * 2) * 10) / 10,
+          temperature: Math.round((19 + 8 * Math.sin(angle - 0.3)) * 10) / 10,
+          humidity: Math.round((68 - 18 * Math.sin(angle - 0.3)) * 10) / 10,
+          light_lux: Math.round(solar * 42000 + 20),
+          battery_percent: 91.5,
+          signal_rssi: -61,
+          recorded_at: ts
+        });
+        stats.sensorReadings++;
+      }
+    }
+
+    const existingAgg = await SensorAggregateDaily.count({ where: { device_id: device.id } });
+    if (existingAgg === 0) {
+      for (let d = 7; d >= 1; d--) {
+        await SensorAggregateDaily.create({
+          zone_id: spec.zone.id,
+          device_id: device.id,
+          aggregate_date: dateOffsetIso(-d),
+          min_soil_moisture: 44.0,
+          max_soil_moisture: 68.5,
+          avg_soil_moisture: 55.2,
+          min_temperature: 14.2,
+          max_temperature: 27.8,
+          avg_temperature: 21.1,
+          min_humidity: 46.0,
+          max_humidity: 78.0,
+          avg_humidity: 61.5,
+          peak_light_lux: 44200,
+          avg_light_lux: 16500,
+          sample_count: 24
+        });
+        stats.dailyAggregates++;
+      }
+    }
+  }
+
+  if (southBed) {
+    const taskSpecs = [
+      {
+        zone_id: southBed.id,
+        assigned_to: demoUser.id,
+        task_type: 'WATER',
+        due_date: dateOffsetIso(0),
+        recurrence_days: 3,
+        is_completed: false,
+        source: 'MANUAL',
+        notes: 'Deep water cherry tomatoes and basil border'
+      },
+      {
+        zone_id: southBed.id,
+        assigned_to: demoUser.id,
+        task_type: 'FERTILIZE',
+        due_date: dateOffsetIso(2),
+        recurrence_days: 14,
+        is_completed: false,
+        source: 'CARE_PLAN',
+        notes: 'Apply organic kelp emulsion around tomato base'
+      },
+      {
+        zone_id: southBed.id,
+        assigned_to: demoUser.id,
+        completed_by: demoUser.id,
+        task_type: 'WATER',
+        due_date: dateOffsetIso(-3),
+        recurrence_days: 3,
+        is_completed: true,
+        completed_at: new Date(now.getTime() - 3 * 86400000),
+        source: 'MANUAL',
+        water_volume_liters: 8.5,
+        notes: 'Completed baseline irrigation cycle'
+      }
+    ];
+
+    let completedWaterTask = null;
+    for (const ts of taskSpecs) {
+      let existing = await CareTask.findOne({
+        where: { zone_id: ts.zone_id, task_type: ts.task_type, notes: ts.notes }
+      });
+      if (!existing) {
+        existing = await CareTask.create(ts);
+        stats.careTasks++;
+      }
+      if (ts.is_completed && ts.task_type === 'WATER') {
+        completedWaterTask = existing;
+      }
+    }
+
+    const existingWaterLogs = await WaterUsageLog.count({ where: { zone_id: southBed.id } });
+    if (existingWaterLogs === 0) {
+      await WaterUsageLog.create({
+        zone_id: southBed.id,
+        task_id: completedWaterTask ? completedWaterTask.id : null,
+        logged_by_user_id: demoUser.id,
+        liters_applied: 8.5,
+        method: 'DRIP_IRRIGATION',
+        recorded_at: new Date(now.getTime() - 3 * 86400000),
+        notes: 'Drip line morning run'
+      });
+      await WaterUsageLog.create({
+        zone_id: southBed.id,
+        logged_by_user_id: demoUser.id,
+        liters_applied: 5.0,
+        method: 'WATERING_CAN',
+        recorded_at: new Date(now.getTime() - 1 * 86400000),
+        notes: 'Hand-watered basil seedlings'
+      });
+      stats.waterLogs += 2;
+    }
+
+    const existingSoilCfg = await AlertConfig.findOne({
+      where: { zone_id: southBed.id, metric: 'SOIL_MOISTURE' }
+    });
+    if (!existingSoilCfg) {
+      await AlertConfig.create({
+        zone_id: southBed.id,
+        metric: 'SOIL_MOISTURE',
+        min_threshold: 35,
+        max_threshold: 85,
+        is_email_enabled: true,
+        is_in_app_enabled: true,
+        quiet_hours_start: '22:00:00',
+        quiet_hours_end: '07:00:00',
+        cooldown_minutes: 60,
+        is_active: true
+      });
+      stats.alertConfigs++;
+    }
+
+    const existingAlerts = await AlertLog.count({ where: { zone_id: southBed.id } });
+    if (existingAlerts === 0) {
+      await AlertLog.create({
+        zone_id: southBed.id,
+        metric: 'SOIL_MOISTURE',
+        triggered_value: 31.5,
+        threshold_value: 35.0,
+        severity: 'WARNING',
+        message: 'Soil moisture dropped below 35% in South Raised Bed (31.5%).',
+        is_read: false,
+        email_sent: false,
+        is_suppressed: false,
+        triggered_at: new Date(now.getTime() - 2 * 3600000)
+      });
+      stats.alertLogs++;
+    }
+
+    const existingRule = await AutomationRule.findOne({
+      where: { zone_id: southBed.id, name: 'Auto-Schedule Watering When Dry' }
+    });
+    if (!existingRule) {
+      await AutomationRule.create({
+        zone_id: southBed.id,
+        name: 'Auto-Schedule Watering When Dry',
+        metric: 'SOIL_MOISTURE',
+        operator: 'LT',
+        threshold_value: 35,
+        weather_condition: 'NO_RAIN',
+        action_type: 'CREATE_TASK',
+        task_type: 'WATER',
+        cooldown_minutes: 180,
+        max_daily_executions: 3,
+        executions_today: 0,
+        is_active: true
+      });
+      stats.automationRules++;
+    }
+  }
+
+  if (greenhouse) {
+    const existingTempCfg = await AlertConfig.findOne({
+      where: { zone_id: greenhouse.id, metric: 'TEMPERATURE' }
+    });
+    if (!existingTempCfg) {
+      await AlertConfig.create({
+        zone_id: greenhouse.id,
+        metric: 'TEMPERATURE',
+        min_threshold: 14,
+        max_threshold: 34,
+        is_email_enabled: true,
+        is_in_app_enabled: true,
+        quiet_hours_start: '22:30:00',
+        quiet_hours_end: '06:30:00',
+        cooldown_minutes: 60,
+        is_active: true
+      });
+      stats.alertConfigs++;
+    }
+
+    const existingGhRule = await AutomationRule.findOne({
+      where: { zone_id: greenhouse.id, name: 'Greenhouse High Temp Alert' }
+    });
+    if (!existingGhRule) {
+      await AutomationRule.create({
+        zone_id: greenhouse.id,
+        name: 'Greenhouse High Temp Alert',
+        metric: 'TEMPERATURE',
+        operator: 'GT',
+        threshold_value: 34,
+        weather_condition: 'ANY',
+        action_type: 'SEND_ALERT',
+        task_type: 'WATER',
+        cooldown_minutes: 120,
+        max_daily_executions: 4,
+        executions_today: 0,
+        is_active: true
+      });
+      stats.automationRules++;
+    }
+  }
+
+  return stats;
+}
+
 async function runDemoSeed() {
   console.log('[Demo Seed] Connecting to database...');
   await dbConfig.connectDb();
   const sequelize = dbConfig.sequelize;
   console.log(`[Demo Seed] Connected using dialect: ${sequelize.options.dialect}`);
 
-  const queryInterface = sequelize.getQueryInterface();
-  const rawTables = await queryInterface.showAllTables();
-  const tables = rawTables.map(t => typeof t === 'string' ? t : (t.tableName || Object.values(t)[0]));
-  const requiredTables = ['users', 'gardens', 'garden_members', 'zones', 'plant_catalog', 'zone_plants'];
-  if (requiredTables.some((t) => !tables.includes(t))) {
-    console.log('[Demo Seed] Running pending migrations first...');
-    await runMigrations();
-  }
+  // Always ensure all migrations (including Sprint 2 022+) are applied
+  await runMigrations();
 
   const catalogCount = await PlantCatalog.count();
   if (catalogCount === 0) {
@@ -406,7 +701,8 @@ async function runDemoSeed() {
     users: { created: 0, updated: 0, existing: 0 },
     gardens: { created: 0, existing: 0 },
     zones: { created: 0, existing: 0 },
-    zonePlants: { created: 0, existing: 0 }
+    zonePlants: { created: 0, existing: 0 },
+    sprint2: null
   };
 
   let demoUser = null;
@@ -419,6 +715,7 @@ async function runDemoSeed() {
     }
   }
 
+  const seededZonesByName = new Map();
   for (const gardenSpec of DEMO_GARDENS) {
     const { garden, action: gardenAction } = await ensureGarden(demoUser, gardenSpec);
     summary.gardens[gardenAction] += 1;
@@ -426,6 +723,7 @@ async function runDemoSeed() {
 
     for (const zoneSpec of gardenSpec.zones) {
       const { zone, action: zoneAction } = await ensureZone(garden, zoneSpec);
+      seededZonesByName.set(zone.name, zone);
       summary.zones[zoneAction] += 1;
       console.log(`[Demo Seed]   Zone "${zone.name}" (${zone.zone_type}/${zone.sunlight_level}/${zone.soil_type}, id=${zone.id}): ${zoneAction}`);
 
@@ -440,6 +738,8 @@ async function runDemoSeed() {
       }
     }
   }
+
+  summary.sprint2 = await ensureSprint2DemoData(demoUser, seededZonesByName);
 
   const totalCatalog = await PlantCatalog.count();
   const demoGardenCount = await Garden.count({ where: { owner_id: demoUser.id } });
